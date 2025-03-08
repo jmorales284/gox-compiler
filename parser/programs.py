@@ -40,10 +40,12 @@ source1 = '''
 '''
 
 model1 = Program([
-    Print(BinaryOp('+', int(2), BinaryOp('*', int(3),UnaryOp('-', int(4))))),
+    Print(BinaryOp('+', int(2), BinaryOp('*', int(3), UnaryOp('-', int(4))))),
     Print(BinaryOp('-', float(2.0), BinaryOp('/', float(3.0), UnaryOp('-', float(4.0))))),
     Print(BinaryOp('+', UnaryOp('-', int(2)), int(3)))
-])  
+])
+
+
 
 
 # ---------------------------------------------------------------------
@@ -60,11 +62,12 @@ source2 = '''
 '''
 
 model2 = Program([
-    ConstDeclaration('pi', float(3.14159)),
+    ConstDeclaration('pi', float, Literal(3.14159)),
     VarDeclaration('tau', float),
     Assignment('tau', BinaryOp('*', Literal(2.0), Constant('pi'))),
     Print(Variable('tau'))
 ])
+
 
 # ---------------------------------------------------------------------
 # Programa 3: Condicionales. Este programa imprime el mínimo de 
@@ -81,20 +84,16 @@ source3 = '''
         print b;
     }
 '''
-
-model3 = Program(
-    decls = [
+model3= Program([
     VarDeclaration('a', int, Literal(2)),
-    VarDeclaration('b', int, Literal(2)),
-    ],
-    stmts = [
-        Conditional(
-            BinaryOp('<', Variable('a'), Variable('b')),
-            Print(Variable('a')),
-            Print(Variable('b'))
-        )
-    ]
-)
+    VarDeclaration('b', int, Literal(3)),
+    Conditional(BinaryOp('<', Variable('a'), Variable('b')),
+                Print(Variable('a')),
+                Print(Variable('b')))
+])
+
+
+
 
 
 # ---------------------------------------------------------------------
@@ -112,7 +111,19 @@ source4 = '''
     }
 '''
 
-model4 = None
+model4 = Program([
+    ConstDeclaration('n', int, Literal(10)),
+    VarDeclaration('x', int, Literal(1)),
+    VarDeclaration('fact', int, Literal(1)),
+    WhileLoop(BinaryOp('<', Variable('x'), Constant('n')),
+            [
+                Assignment('fact', BinaryOp('*', Variable('fact'), Variable('x'))),
+                Print(Variable('fact')),
+                Assignment('x', BinaryOp('+', Variable('x'), Literal(1)))
+            ])
+])
+
+
 
 # ---------------------------------------------------------------------
 # Programa 5: Funciones (simple)
@@ -126,7 +137,11 @@ source5 = '''
     print square(10);
 '''
 
-model5 = None
+model5 = Program([
+    Function('square', [Parameter('x', int)], int, Return(BinaryOp('*', Variable('x'), Variable('x')))),
+    Print(FunctionCall('square', [Literal(4)])),
+    Print(FunctionCall('square', [Literal(10)]))
+])
 
 # ---------------------------------------------------------------------
 # Programa 6: Funciones (complejas)
@@ -144,8 +159,24 @@ source6 = '''
 
     print(fact(10));
 '''
+Return
 
-model6 = None
+model6 = Program([
+    Function('fact', [Parameter('n', int)], int, [
+        VarDeclaration('x', int, Literal(1)),
+        VarDeclaration('result', int, Literal(1)),
+        WhileLoop(BinaryOp('<', Variable('x'), Variable('n')),
+            [
+                Assignment('result', BinaryOp('*', Variable('result'), Variable('x'))),
+                Assignment('x', BinaryOp('+', Variable('x'), Literal(1)))
+            ]),
+        Return(Variable('result'))
+    ]),
+    Print(FunctionCall('fact', [Literal(10)]))
+])
+        
+
+print(model6)
 
 # ---------------------------------------------------------------------
 # Programa 7: Conversión de tipos
@@ -159,7 +190,16 @@ source7 = '''
     print(int(spam) * int(pi));
 '''
 
-model7 = None
+model7 = Program([
+    VarDeclaration('pi', float, Literal(3.14159)),
+    VarDeclaration('spam', int, Literal(42)),
+    Print(BinaryOp('*', Variable('spam'), FunctionCall('int', [Variable('pi')]))),
+    Print(BinaryOp('*', FunctionCall('float', [Variable('spam')]), Variable('pi'))),
+    Print(BinaryOp('*', FunctionCall('int', [Variable('spam')]), FunctionCall('int', [Variable('pi')]))
+    )
+])
+
+print(model7)
 
 # ---------------------------------------------------------------------
 # Programa 8: Acceso a memoria
@@ -171,4 +211,11 @@ source8 = '''
     print(`addr + 8);
 '''
 
-model8 = None
+model8 = Program([
+    VarDeclaration('x', int, Memory(8192)),
+    VarDeclaration('addr', int, Literal(1234)),
+    MemoryAssignmentLocation('addr', Literal(5678)),
+    Print(BinaryOp('+', Memory('addr'), Literal(8)))
+])
+
+print(model8)

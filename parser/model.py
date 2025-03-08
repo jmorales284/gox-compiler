@@ -11,13 +11,15 @@ class Node:
         return f"Node({self.type}, {self.value}, children={self.children})"
     
 class Program(Node):
-    def __init__(self, decls,stmts):
+    def __init__(self, decls):
         super().__init__("Program")
-        self.stmts = stmts
+        self.add_child(Node("Declarations", decls))
         self.decls = decls
     
     def __repr__(self):
-        return f'Program({self.stmts}), {self.decls}'
+        return f'Program({self.decls})'
+
+
     
 # Parte 1. Statements
 #
@@ -44,6 +46,7 @@ class Print(Node):
     def __init__(self, expression):
         super().__init__("Print")
         self.add_child(Node("Expression", expression))
+        self.expression = expression
     
     def __repr__(self):
         return f'Print({self.expression})'
@@ -67,11 +70,14 @@ class Conditional(Node):
 class WhileLoop(Node):
     def __init__(self, test, body):
         super().__init__("WhileLoop")
+        self.test = test
+        self.body = body
         self.add_child(Node("Test", test))
         self.add_child(Node("Body", body))
-    
+
     def __repr__(self):
         return f'WhileLoop({self.test}, {self.body})'
+
 
 # 1.5 Break y Continue
 #     while test {
@@ -215,7 +221,7 @@ class Variable(Node):
         return f'Variable({self.name})'
     
 class Constant(Node):
-    def __init__(self, name, va):
+    def __init__(self, name):
         super().__init__("Constant")
         self.name = name
     
@@ -338,9 +344,10 @@ class PrimitiveAssignmentLocation(Node):
         super().__init__("PrimitiveAssignmentLocation")
         self.name = name
         self.expression = expression
-    
+
     def __repr__(self):
-        return f'PrimitiveAssignmentLocation({self.name}), {self.expression}'
+        return f'PrimitiveAssignmentLocation({self.name}, {self.expression})'
+
     
 class PrimitiveReadLocation(Node):
     def __init__(self, name):
@@ -371,3 +378,11 @@ class MemoryReadLocation(Node):
     
     def __repr__(self):
         return f'MemoryReadLocation({self.address})'
+    
+class Memory(Node):
+    def __init__(self, address):
+        super().__init__("Memory")
+        self.address = address
+    
+    def __repr__(self):
+        return f'Memory({self.address})'
