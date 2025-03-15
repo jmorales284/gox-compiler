@@ -1,0 +1,29 @@
+{
+  "name": "gox",
+  "displayName": "GOX",
+  "description": ".gox",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.97.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+        {
+            "id": "gox",
+            "aliases": ["GOX", "gox"],
+            "extensions": [".gox"],
+            "configuration": "./language-configuration.json"
+        }
+    ],
+    "grammars": [
+        {
+            "language": "gox",
+            "scopeName": "source.gox",
+            "path": "./syntaxes/gox.tmLanguage.json"
+        }
+    ]
+  }
+}
