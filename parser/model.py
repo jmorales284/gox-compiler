@@ -1,23 +1,26 @@
 class Node:
-    def __init__(self, type, value=None):
-        self.type = type
+    def __init__(self, node_type, value=None, children=None):
+        self.node_type = node_type
         self.value = value
-        self.children = []
+        self.children = children if children is not None else []
 
     def add_child(self, node):
         self.children.append(node)
 
     def __repr__(self):
-        return f"Node({self.type}, {self.value}, children={self.children})"
-    
+        children_repr = ", ".join(repr(child) for child in self.children)
+        return f"Node({self.node_type}, {self.value}, [{children_repr}])"
+
 class Program(Node):
     def __init__(self, decls):
         super().__init__("Program")
-        self.add_child(Node("Declarations", decls))
         self.decls = decls
+        for decl in decls:
+            self.add_child(decl)  
     
     def __repr__(self):
         return f'Program({self.decls})'
+
 
 
     
@@ -32,11 +35,14 @@ class Program(Node):
 
 class Assignment(Node):
     def __init__(self, location, expression):
+        super().__init__("Assignment")
         self.location = location
         self.expression = expression
+        self.add_child(location)
+        self.add_child(expression)
 
     def __repr__(self):
-        return f'Assignment({self.location}, {self.expression})'
+        return f'Assignment(location={self.location}, expression{self.expression})'
     
     
 # 1.2 Printing
@@ -45,35 +51,41 @@ class Assignment(Node):
 class Print(Node):
     def __init__(self, expression):
         super().__init__("Print")
-        self.add_child(Node("Expression", expression))
-        self.expression = expression
+        self.add_child(expression)
+
     
     def __repr__(self):
-        return f'Print({self.expression})'
+        return f'Print({self.children[0]})'
     
 # 1.3 Conditional
 #     if test { consequence } else { alternative }
 
-class Conditional(Node):
-    def __init__(self, test, consequence, alternative = None):
+class If(Node):
+    def __init__(self, test, consequence, alternative=None):
         super().__init__("Conditional")
         self.test = test
         self.consequence = consequence
         self.alternative = alternative
 
+        self.add_child(test)
+        self.add_child(consequence)
+        if alternative:
+            self.add_child(alternative)
+
     def __repr__(self):
         return f'Conditional({self.test}, {self.consequence}, {self.alternative})'
-    
+
 #
 # 1.4 While Loop
 #     while test { body }
-class WhileLoop(Node):
+class While(Node):
     def __init__(self, test, body):
         super().__init__("WhileLoop")
         self.test = test
         self.body = body
-        self.add_child(Node("Test", test))
-        self.add_child(Node("Body", body))
+
+        self.add_child(test)  
+        self.add_child(body)  
 
     def __repr__(self):
         return f'WhileLoop({self.test}, {self.body})'
@@ -85,12 +97,20 @@ class WhileLoop(Node):
 #         break;   // continue
 #     }
 
-# def Break(Node):
-#     def __init__(self):
-#         super().__init__("Break")
+class Break(Node):
+    def __init__(self):
+        super().__init__("Break")
 
-#     def __repr__(self):
-#         return f'Break()'
+    def __repr__(self):
+        return "Break"
+
+class Continue(Node):
+    def __init__(self):
+        super().__init__("Continue")
+
+    def __repr__(self):
+        return "Continue"
+
 
 # 1.6 Return un valor
 #     return expresion ;
@@ -99,9 +119,11 @@ class Return(Node):
     def __init__(self, expression):
         super().__init__("Return")
         self.expression = expression
+        self.add_child(expression)  # Agregar la expresión como un nodo hijo
 
     def __repr__(self):
         return f'Return({self.expression})'
+
     
 
 # ----------------------------------------------------------------------
@@ -122,26 +144,36 @@ class Return(Node):
 # Las Constantes son inmutable. Si un valor está presente, el tipo puede ser 
 # omitido e inferir desde el tipo del valor.
 
-class VarDeclaration(Node):
-    def __init__(self, name, type, value = None):
-        super().__init__("Variable")
+class VariableDeclaration(Node):
+    def __init__(self, name, type, value=None):
+        super().__init__("VariableDeclaration")
         self.name = name
         self.type = type
         self.value = value
+
+        self.add_child(Node("Name", name))
+        self.add_child(Node("Type", type))
+        if value is not None:
+            self.add_child(Node("Value", value))
 
     def __repr__(self):
         return f'Var({self.name}, {self.type}, {self.value})'
 
+
 class ConstDeclaration(Node):
     def __init__(self, name, type, value):
-        super().__init__("Constant")
+        super().__init__("ConstDeclaration")
         self.name = name
         self.type = type
         self.value = value
 
+        self.add_child(Node("Name", name))
+        self.add_child(Node("Type", type))
+        self.add_child(Node("Value", value))
+
     def __repr__(self):
         return f'Const({self.name}, {self.type}, {self.value})'
-    
+
 
     
 # 2.2 Function definitions.
@@ -152,27 +184,39 @@ class ConstDeclaration(Node):
 #
 #     import func name(parameters) return_type;
 
-class Function(Node):
+class FunctionDefinition(Node):
     def __init__(self, name, parameters, return_type, body):
-        super().__init__("Function")
+        super().__init__("FunctionDefinition")
         self.name = name
         self.parameters = parameters
         self.return_type = return_type
         self.body = body
-    
+
+        self.add_child(Node("Name", name))
+        param_nodes = [Node("Parameter", param) for param in parameters]
+        self.children.extend(param_nodes)
+        self.add_child(Node("ReturnType", return_type))
+        self.add_child(Node("Body", body))
+
     def __repr__(self):
         return f'Function({self.name}, {self.parameters}, {self.return_type}, {self.body})'
-    
-class Import(Node):
+
+
+class FunctionImport(Node):
     def __init__(self, name, parameters, return_type):
-        super().__init__("Import")
+        super().__init__("FunctionImport")
         self.name = name
         self.parameters = parameters
         self.return_type = return_type
 
+        self.add_child(Node("Name", name))
+        param_nodes = [Node("Parameter", param) for param in parameters]
+        self.children.extend(param_nodes)
+        self.add_child(Node("ReturnType", return_type))
+
     def __repr__(self):
         return f'Import({self.name}, {self.parameters}, {self.return_type})'
-    
+
 # 2.3 Function Parameters
 #
 #     func square(x int) int { return x*x; }
@@ -186,10 +230,13 @@ class Parameter(Node):
         super().__init__("Parameter")
         self.name = name
         self.type = type
-    
+        
+        self.add_child(Node("Name", name))
+        self.add_child(Node("Type", type))
+
     def __repr__(self):
         return f'Parameter({self.name}, {self.type})'
-    
+
 # ----------------------------------------------------------------------
 
 # Parte 3. Expressions
@@ -204,29 +251,59 @@ class Parameter(Node):
 #     true,false   (Booleanos)
 #     'c'          (Carácter)
 
-class Literal(Node):
+
+    
+class VariableReference(Node):
+    def __init__(self, name):
+        super().__init__("VariableReference")
+        self.name = name
+        self.add_child(Node("Name", name))  # Agregar como hijo para la estructura del AST
+
+    def __repr__(self):
+        return f'VariableReference({repr(self.name)})'
+
+class ConstantReference(Node):
+    def __init__(self, name):
+        super().__init__("ConstantReference")
+        self.name = name
+        self.add_child(Node("Name", name))
+
+    def __repr__(self):
+        return f'ConstantReference({repr(self.name)})'
+    
+class Integer(Node):
     def __init__(self, value):
-        super().__init__("Literal")
-        self.value = value
-    
+        super().__init__("Integer")
+        self.value = int(value)
+
     def __repr__(self):
-        return f'Literal({self.value})'
-    
-class Variable(Node):
-    def __init__(self, name):
-        super().__init__("Variable")
-        self.name = name
-    
+        return f'Integer({self.value})'
+
+class Float(Node):
+    def __init__(self, value):
+        super().__init__("Float")
+        self.value = float(value)
+
     def __repr__(self):
-        return f'Variable({self.name})'
-    
-class Constant(Node):
-    def __init__(self, name):
-        super().__init__("Constant")
-        self.name = name
-    
+        return f'Float({self.value})'
+
+class Char(Node):
+    def __init__(self, value):
+        super().__init__("Char")
+        self.value = str(value)  # Asegurar que es un carácter
+
     def __repr__(self):
-        return f'Constant({self.name})'
+        return f'Char({self.value})'
+
+class Boolean(Node):
+    def __init__(self, value):
+        super().__init__("Boolean")
+        self.value = value in ["true", True]  # Convertir a booleano
+
+    def __repr__(self):
+        return f'Boolean({self.value})'
+
+
     
 # 3.2 Binary Operators
 #     left + right   (Suma)
@@ -248,10 +325,14 @@ class BinaryOp(Node):
         self.operator = operator
         self.left = left
         self.right = right
-    
+
+        self.add_child(Node("Operator", operator))
+        self.add_child(left)
+        self.add_child(right)
+
     def __repr__(self):
-        return f'BinaryOp({self.operator}, {self.left}, {self.right})'
-    
+        return f'BinaryOp({repr(self.operator)}, {self.left}, {self.right})'
+
 # 3.3 Unary Operators
 #     +operand  (Positivo)
 #     -operand  (Negación)
@@ -263,9 +344,13 @@ class UnaryOp(Node):
         super().__init__("UnaryOp")
         self.operator = operator
         self.operand = operand
-    
+
+        self.add_child(Node("Operator", operator))
+        self.add_child(operand)
+
     def __repr__(self):
-        return f'UnaryOp({self.operator}, {self.operand})'
+        return f'UnaryOp({repr(self.operator)}, {self.operand})'
+
     
 # 3.4 Lectura de una ubicación (vea mas adelante)
 #     location
@@ -274,22 +359,29 @@ class Location(Node):
     def __init__(self, name):
         super().__init__("Location")
         self.name = name
-    
+
+        self.add_child(Node("Name", name))
+
     def __repr__(self):
         return f'Location({self.name})'
+
     
 # 3.5 Conversiones de tipo
 #     int(expr)  
 #     float(expr)
 
 class TypeCast(Node):
-    def __init__(self, type, expression):
+    def __init__(self, target_type, expression):
         super().__init__("TypeCast")
-        self.type = type
+        self.target_type = target_type
         self.expression = expression
-    
+
+        self.add_child(Node("TargetType", target_type))
+        self.add_child(expression)
+
     def __repr__(self):
-        return f'TypeCast({self.type}, {self.expression})'
+        return f'TypeCast({self.target_type}, {self.expression})'
+
     
 # 3.6 Llamadas a función
 #     func(arg1, arg2, ..., argn)
@@ -299,9 +391,14 @@ class FunctionCall(Node):
         super().__init__("FunctionCall")
         self.name = name
         self.arguments = arguments
-    
+
+        self.add_child(Node("FunctionName", name))
+        for arg in arguments:
+            self.add_child(arg)
+
     def __repr__(self):
         return f'FunctionCall({self.name}, {self.arguments})'
+
     
 # ----------------------------------------------------------------------
 # Parte 4: Locations
@@ -345,17 +442,23 @@ class PrimitiveAssignmentLocation(Node):
         self.name = name
         self.expression = expression
 
+        self.add_child(Node("Variable", name))
+        self.add_child(expression)
+
     def __repr__(self):
         return f'PrimitiveAssignmentLocation({self.name}, {self.expression})'
 
-    
 class PrimitiveReadLocation(Node):
     def __init__(self, name):
         super().__init__("PrimitiveReadLocation")
         self.name = name
-    
+
+      
+        self.add_child(Node("Variable", name))
+
     def __repr__(self):
         return f'PrimitiveReadLocation({self.name})'
+
     
 # 4.2 Direcciones de memoria. Un número entero precedido por una comilla invertida (``)
 #
@@ -367,22 +470,35 @@ class MemoryAssignmentLocation(Node):
         super().__init__("MemoryAssignmentLocation")
         self.address = address
         self.expression = expression
-    
+
+
+        self.add_child(VariableReference(address))
+        self.add_child(expression)
+
     def __repr__(self):
-        return f'MemoryAssignmentLocation({self.address}), {self.expression}'
-    
+        return f'MemoryAssignmentLocation({self.address}, {self.expression})'
+
+
 class MemoryReadLocation(Node):
     def __init__(self, address):
         super().__init__("MemoryReadLocation")
         self.address = address
-    
+
+        self.add_child(VariableReference(address))
+
     def __repr__(self):
         return f'MemoryReadLocation({self.address})'
-    
+
+
 class Memory(Node):
     def __init__(self, address):
         super().__init__("Memory")
         self.address = address
-    
+
+
+        self.add_child(Integer(address))
+
     def __repr__(self):
         return f'Memory({self.address})'
+
+
