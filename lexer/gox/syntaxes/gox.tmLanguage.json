@@ -1,0 +1,45 @@
+{
+    "scopeName": "source.gox",
+    "name": "GOX",
+    "patterns": [
+        { "include": "#comments" },
+        { "include": "#keywords" },
+        { "include": "#types" },
+        { "include": "#strings" },
+        { "include": "#numbers" },
+        { "include": "#operators" }
+    ],
+    "repository": {
+        "comments": {
+            "patterns": [
+                { "match": "//.*", "name": "comment.line.double-slash.gox" },
+                { "begin": "/\\*", "end": "\\*/", "name": "comment.block.gox" }
+            ]
+        },
+        "keywords": {
+            "patterns": [
+                { "match": "\\b(func|var|const|return|if|else|while|print)\\b", "name": "keyword.control.gox" }
+            ]
+        },
+        "types": {
+            "patterns": [
+                { "match": "\\b(int|float|bool|char)\\b", "name": "storage.type.gox" }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                { "match": "\"(\\\\.|[^\"])*\"", "name": "string.quoted.double.gox" }
+            ]
+        },
+        "numbers": {
+            "patterns": [
+                { "match": "\\b\\d+\\.?\\d*\\b", "name": "constant.numeric.gox" }
+            ]
+        },
+        "operators": {
+            "patterns": [
+                { "match": "[+\\-*/%=<>!&|]", "name": "keyword.operator.gox" }
+            ]
+        }
+    }
+}
