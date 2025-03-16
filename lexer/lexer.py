@@ -1,6 +1,14 @@
 # lexer.py
 from rich import print
 import sly
+from dataclasses import dataclass
+
+@dataclass
+class Token:
+    type: str
+    value: any
+    lineno: int
+
 
 class Lexer(sly.Lexer):
     tokens = [

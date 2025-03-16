@@ -86,11 +86,11 @@
 from typing import List
 from dataclasses import dataclass
 from model import (
-    Integer, Float, Char, Bool, TypeCast, BinOp, 
-    UnaryOp, Assignment, Variable, NamedLocation, 
-    Break, Continue, Return, Print, If, While, 
-    Function, Parameter,
+    Node, Program, Assignment, Print, If, While, Break, Continue, Return,
+    VariableDeclaration, ConstDeclaration, FunctionDefinition, FunctionImport, Parameter,
+    VariableReference, ConstantReference, Integer, Float, Char, Boolean
 )
+from lexer.lexer import Token
 
 # -------------------------------
 # Implementación del Parser

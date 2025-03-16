@@ -64,11 +64,12 @@ source2 = '''
 '''
 
 model2 = Program([
-    ConstDeclaration('pi', Float(3.14159)),  
-    VariableDeclaration('tau', 'float'),  
+    ConstDeclaration('pi', Float(3.14159)),  # Ahora infiere que es float automáticamente
+    VariableDeclaration('tau', 'float'),
     Assignment(VariableReference('tau'), BinaryOp('*', Float(2.0), ConstantReference('pi'))),
     Print(VariableReference('tau'))
 ])
+
 
 
 print(model2)
