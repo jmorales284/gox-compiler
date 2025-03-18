@@ -1,5 +1,5 @@
-from typing import List, Union
-from dataclasses import dataclass, field
+from typing import List, Optional
+from dataclasses import dataclass
 from multimethod import multimeta
 
 @dataclass
@@ -19,9 +19,6 @@ class Statement(Node):
 class Expression(Node):
     pass
     
-@dataclass
-class Program(Node):
-    statements: List[Node]
 
     
 @dataclass
@@ -30,22 +27,8 @@ class Declaration(Statement):
     
 
 @dataclass
-class Translation(Statement):
-    decl: List[Declaration]
-
-@dataclass
-class CompoundStatement(Statement):
-    decls : List[Declaration]=field(default_factory=list)
-    stmts : List[Statement] = field(default_factory=list)
-
-@dataclass
-class TypeDefinition(Declaration):
-    type : str
-    name : str
-    expr : Expression = None
-    Extern : bool = False
-    Const : bool = False
-
+class Location(Node):
+    pass
     
 # Parte 1. Statements
 #
@@ -58,7 +41,7 @@ class TypeDefinition(Declaration):
 
 @dataclass
 class Assignment(Statement):
-    location : Union['Location', Expression]
+    location : Location
     expression : Expression
 
     
@@ -77,7 +60,7 @@ class Print(Statement):
 class If(Statement):
     test: Expression
     consequence: List[Statement]
-    alternative: List[Statement]=field(default_factory=list)
+    alternative: List[Statement]
 
 
 
@@ -87,7 +70,7 @@ class If(Statement):
 @dataclass
 class While(Statement):
     test: Expression
-    body: List[Statement]=field(default_factory=list)
+    body: List[Statement]
 
 
 
@@ -137,28 +120,20 @@ class Return(Statement):
 # omitido e inferir desde el tipo del valor.
 
 @dataclass
-class VariableDeclaration(Node):
+class VarDeclaration(Declaration):
     name: str
-    type: str
-    value: Expression = None
-    is_const: bool = False
+    type: Optional[str]
+    value: Optional[Expression]
 
+@dataclass
+class ConstDeclaration(Declaration):
+    name: str
+    type: Optional[str]
+    value: Expression
 
-
-
-    
-# 2.2 Function definitions.
-#
-#     func name(parameters) return_type { statements }
-#
-# Una función externa puede ser importada usando una sentencia especial:
-#
-#     import func name(parameters) return_type;
-
-    
 # ----------------------------------------------------------------------
 # Parte 2.3 Function Parameters
-# 2.3 Function Parameters
+# 2.2 Function Parameters
 #
 #     func square(x int) int { return x*x; }
 #
@@ -166,23 +141,36 @@ class VariableDeclaration(Node):
 # Tiene un nombre y un tipo como una variable, pero es declarada como parte
 # de la definición de una función, no como una declaración "var" separada.
 
-
-
 @dataclass
 class Parameter(Declaration):
     name: str
     type: str
 
 
+
+    
+# 2.3 Function definitions.
+#
+#     func name(parameters) return_type { statements }
+#
+# Una función externa puede ser importada usando una sentencia especial:
+#
+#     import func name(parameters) return_type;
+
 @dataclass
-class FunctionDefinition(Declaration):
+class FunctionDef(Declaration):
     name: str
     parameters: List[Parameter]
     return_type: str
     body: List[Statement]
-    is_imported: bool = False
 
+    
 
+@dataclass
+class ImportFunction(Declaration):
+    name: str
+    parameters: List[Parameter]
+    return_type: str
 
 
 
@@ -204,21 +192,20 @@ class FunctionDefinition(Declaration):
 
     
 @dataclass
-class Integer(Expression):
+class LiteralInteger(Expression):
     value: int
 
 @dataclass
-class Float(Expression):
+class LiteralFloat(Expression):
     value: float
 
 @dataclass
-class Char(Expression):
-    value: str
-
-@dataclass
-class Boolean(Expression):
+class LiteralBool(Expression):
     value: bool
 
+@dataclass
+class LiteralChar(Expression):
+    value: str
     
 # 3.2 Binary Operators
 #     left + right   (Suma)
@@ -257,10 +244,7 @@ class UnaryOp(Expression):
 # 3.4 Lectura de una ubicación (vea mas adelante)
 #     location
 
-@dataclass
-class Location(Expression):
-    name: str
-
+#Se  implementa mas bajo
     
 # 3.5 Conversiones de tipo
 #     int(expr)  
@@ -282,9 +266,7 @@ class FunctionCall(Expression):
     arguments: List[Expression]
 
 
-@dataclass
-class VariableLocation(Expression):
-    name: str
+
 
 
 
@@ -326,8 +308,10 @@ class VariableLocation(Expression):
 #     location = expression;        // Almacena un valor dentro de location
 
 
-
-
+@dataclass
+class VarLocation(Location):
+    """Ubicación de una variable normal."""
+    name: str
 
 
     
@@ -336,14 +320,14 @@ class VariableLocation(Expression):
 #     `address = 123;
 #     print `address + 10;
 
-    def __init__(self, address):
-        super().__init__("Memory")
-        self.address = address
+
+@dataclass
+class MemoryAddress(Location):
+    """Ubicación de una dirección de memoria (` `address`)."""
+    address: Expression  # Puede ser un entero o una expresión que lo evalúe
 
 
-        self.add_child(Integer(address))
-
-    def __repr__(self):
-        return f'Memory({self.address})'
-
-
+@dataclass
+class LocationExpr(Expression):
+    """Permite usar una ubicación dentro de expresiones."""
+    location: Location
