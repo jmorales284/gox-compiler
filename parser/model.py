@@ -2,9 +2,6 @@ from typing import List, Optional
 from dataclasses import dataclass
 from multimethod import multimeta
 
-@dataclass
-class Visitor(metaclass=multimeta):
-    pass
 
 @dataclass
 class Node:
@@ -122,7 +119,7 @@ class Return(Statement):
 @dataclass
 class VarDeclaration(Declaration):
     name: str
-    type: Optional[str]
+    type: str
     value: Optional[Expression]
 
 @dataclass
