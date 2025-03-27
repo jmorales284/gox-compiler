@@ -1,8 +1,7 @@
-# gparser.py
 from rich import print
 import sly
 import json
-from lexer import Lexer
+from lexer.lexer import Lexer
 from model import *
 
 class Parser(sly.Parser):
@@ -13,12 +12,16 @@ class Parser(sly.Parser):
         self.ast = []
 
     def parse(self, tokens):
-        self.ast = self.parse_tokens(tokens)
+        self.ast = super().self.parse(tokens)
         return self.ast
 
     @_('{ statement }')
     def program(self, p):
         return list(p.statement)
+
+    @_("import_stmt")
+    def statement(self, p):
+        return p.import_stmt
 
     @_("assignment")
     def statement(self, p):
@@ -48,13 +51,21 @@ class Parser(sly.Parser):
     def statement(self, p):
         return p.print_stmt
 
+    @_("break_stmt")
+    def statement(self, p):
+        return p.break_stmt
+
+    @_("continue_stmt")
+    def statement(self, p):
+        return p.continue_stmt
+
     @_("location '=' expression ';'")
     def assignment(self, p):
         return Assignment(p.location, p.expression)
 
-    @_("VAR ID type ['=' expression ] ';'")
+    @_("VAR ID type? ['=' expression ] ';'")
     def vardecl(self, p):
-        return VarDeclaration(p.ID, p.type, p.expression if hasattr(p, 'expression') else None)
+        return VarDeclaration(p.ID, p.type if hasattr(p, 'type') else None, p.expression if hasattr(p, 'expression') else None)
 
     @_("FUNC ID '(' parameters ')' type '{' { statement } '}'")
     def funcdecl(self, p):
@@ -75,6 +86,52 @@ class Parser(sly.Parser):
     @_("PRINT expression ';'")
     def print_stmt(self, p):
         return Print(p.expression)
+
+    @_("BREAK ';'")
+    def break_stmt(self, p):
+        return Break()
+
+    @_("CONTINUE ';'")
+    def continue_stmt(self, p):
+        return Continue()
+
+    @_("IMPORT STRING ';'")
+    def import_stmt(self, p):
+        return Import(p.STRING)
+
+    @_("ID '(' arguments? ')'")
+    def function_call(self, p):
+        return FunctionCall(p.ID, p.arguments if hasattr(p, 'arguments') else [])
+
+    @_("parameters | empty")
+    def parameters(self, p):
+        return p.parameters if hasattr(p, 'parameters') else []
+
+    @_("ID type (',' ID type)*")
+    def parameters(self, p):
+        params = [(p.ID, p.type)]
+        for i in range(2, len(p), 2):
+            params.append((p[i], p[i+1]))
+        return params
+
+    @_("arguments | empty")
+    def arguments(self, p):
+        return p.arguments if hasattr(p, 'arguments') else []
+
+    @_("expression (',' expression)*")
+    def arguments(self, p):
+        args = [p.expression]
+        for i in range(2, len(p), 2):
+            args.append(p[i])
+        return args
+
+    @_("ID | '`' expression '")
+    def location(self, p):
+        return p.ID if hasattr(p, 'ID') else p.expression
+
+    @_("('int' | 'float' | 'char' | 'bool')")
+    def type(self, p):
+        return p[0]
 
     @_("factor (('*' | '/') factor)*")
     def addterm(self, p):
@@ -104,18 +161,17 @@ class Parser(sly.Parser):
             result = BinaryOp(p[i], result, p[i + 1])
         return result
 
-    @_("INTEGER")
-    def factor(self, p):
-        return LiteralInteger(int(p.INTEGER))
+    @_("INTEGER | FLOAT | CHAR | bool")
+    def literal(self, p):
+        return p[0]
 
-    @_("FLOAT")
-    def factor(self, p):
-        return LiteralFloat(float(p.FLOAT))
+    @_("'true' | 'false'")
+    def bool(self, p):
+        return p[0] == 'true'
 
     def save_ast_to_json(self, filename='ast_output.json'):
         with open(filename, 'w') as f:
             json.dump([node.__dict__ for node in self.ast], f, indent=4)
-
 """
 
 # Declaración de funciones
