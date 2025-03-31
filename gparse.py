@@ -3,99 +3,164 @@ from glexer import GoxLexer
 from gmodel import *
 
 class GoxParser(sly.Parser):
+    """
+    Parser para el lenguaje Gox. Convierte una lista de tokens generada por el lexer
+    en un Árbol de Sintaxis Abstracta (AST) basado en la gramática definida.
+    """
+
     tokens = GoxLexer.tokens
 
     debugfile = 'debug.txt'
 
     precedence = (
-        ('right', '='),                 # Asignación (mayor precedencia)
-        ('left', 'LOR'),                # OR lógico
+        ('right', '='),                 # Asignación (evaluada de derecha a izquierda)
+        ('left', 'LOR'),                # OR lógico (evaluada de izquierda a derecha)
         ('left', 'LAND'),               # AND lógico
-        ('nonassoc', 'EQ', 'NE'),       # Comparación de igualdad
-        ('nonassoc', 'LT', 'GT', 'LE', 'GE'),  # Comparaciones
+        ('nonassoc', 'EQ', 'NE'),       # Comparación de igualdad (sin asociatividad)
+        ('nonassoc', 'LT', 'GT', 'LE', 'GE'),  # Comparaciones (<, >, <=, >=)
         ('left', '+', '-'),             # Suma/resta
-        ('left', '*', '/'),             # Multiplicación/división
-        ('right', 'UMINUS'),   # Operadores unarios
-        ('nonassoc', '(')     # Agrupación y acceso
+        ('left', '*', '/', '%'),        # Multiplicación/división/módulo
+        ('right', 'UMINUS'),            # Operadores unarios (evaluados de derecha a izquierda)
+        ('nonassoc', '(')               # Agrupación (paréntesis)
     )
 
 
     # Reglas de la gramática
 
+
+
+    # Reglas de la gramática
+
+    # program <- statement* EOF
     @_('statement_list')
     def program(self, p):
+        """
+        Representa un programa completo en Gox.
+        Contiene una lista de sentencias (statements).
+        """
         return Program(p.statement_list)
 
+    # statement_list <- statement_list statement
     @_('statement_list statement')
     def statement_list(self, p):
+        """
+        Lista de sentencias. Permite múltiples sentencias en el programa.
+        """
         return p.statement_list + [p.statement]
 
-
+    # statement_list <- statement
     @_('statement')
     def statement_list(self, p):
+        """
+        Lista de sentencias con una sola sentencia.
+        """
         return [p.statement]
 
-    # Declaraciones y sentencias
+# statement <- assignment / vardecl / funcdecl / if_stmt / while_stmt / break_stmt / continue_stmt / return_stmt / print_stmt
     @_('vardecl')
     def statement(self, p):
+        """
+        Declaración de variables.
+        """
         return p.vardecl
-    
 
     @_('assignment')
     def statement(self, p):
+        """
+        Asignación de valores a variables.
+        """
         return p.assignment
 
     @_('funcdecl')
     def statement(self, p):
+        """
+        Declaración de funciones.
+        """
         return p.funcdecl
 
     @_('if_stmt')
     def statement(self, p):
+        """
+        Sentencia condicional (if-else).
+        """
         return p.if_stmt
 
     @_('while_stmt')
     def statement(self, p):
+        """
+        Sentencia de bucle (while).
+        """
         return p.while_stmt
 
     @_('BREAK ";"')
     def statement(self, p):
+        """
+        Sentencia break.
+        """
         return Break()
 
     @_('CONTINUE ";"')
     def statement(self, p):
+        """
+        Sentencia continue.
+        """
         return Continue()
 
     @_('RETURN expression ";"')
     def statement(self, p):
+        """
+        Sentencia return con una expresión.
+        """
         return Return(p.expression)
 
     @_('PRINT expression ";"')
     def statement(self, p):
+        """
+        Sentencia print para imprimir una expresión.
+        """
         return Print(p.expression)
 
-    # Declaración de variables
+    # vardecl <- ('var'/'const') ID type? ('=' expression)? ';'
     @_('VAR ID opt_type opt_init ";"')
     def vardecl(self, p):
+        """
+        Declaración de variables con la palabra clave 'var'.
+        """
         return VarDeclaration(p.ID, p.opt_type, p.opt_init, is_const=False)
 
     @_('CONST ID type opt_init ";"')
     def vardecl(self, p):
+        """
+        Declaración de constantes con la palabra clave 'const'.
+        """
         return VarDeclaration(p.ID, p.type, p.opt_init, is_const=True)
-    
+
     @_(' "=" expression')
     def opt_init(self, p):
+        """
+        Inicialización opcional de una variable o constante.
+        """
         return p.expression
-    
+
     @_('')
     def opt_init(self, p):
+        """
+        Sin inicialización.
+        """
         return None
-    
+
     @_('type')
     def opt_type(self, p):
+        """
+        Tipo opcional de una variable o constante.
+        """
         return p.type
 
     @_('')
     def opt_type(self, p):
+        """
+        Sin tipo especificado.
+        """
         return None
 
 
@@ -218,6 +283,10 @@ class GoxParser(sly.Parser):
     @_('expression "/" expression')
     def expression(self, p):
         return BinaryOp('/', p.expression0, p.expression1)
+    
+    @_('expression "%" expression')
+    def expression(self, p):
+        return BinaryOp('%', p.expression0, p.expression1)
 
     @_('"-" expression %prec UMINUS')
     def expression(self, p):
@@ -328,37 +397,53 @@ def save_ast_to_json(ast, filename="ast_output.json"):
 
 #Prueba rápida de la gramática
 data = '''
+// Declaración de variables y constantes
 var x int = 10;
-const y float = 3.14;
-func add(a int, b int) int { return a + b; }
-if x > 10 { print x; } else { print y; }
+const PI float = 3.1416;
+var flag bool = true;
+var ch char = 'A';
+
+// Función con parámetros y retorno
+func sum(a int, b int) int {
+    return a + b;
+}
+
+// Uso de `if-else`
+if x > 5 {
+    print (x);
+} else {
+    print (x);
+}
+
+
+
 '''
 tokens = list(GoxLexer().tokenize(data))
 ast = GoxParser().parse(iter(tokens))
 save_ast_to_json(ast, "ast_output.json")
 
 
-# ----------------------------------------------
-# 1. Prueba de asignación
-# ----------------------------------------------
-tokens = list(GoxLexer().tokenize("x = 3 + 4 * 2;"))
-ast = GoxParser().parse(iter(tokens))
-save_ast_to_json(ast, "test_assignment.json")
-
-# ----------------------------------------------
-# 2. Prueba de declaración de variable
-# ----------------------------------------------
-tokens = list(GoxLexer().tokenize("var x int = 5;"))
-ast = GoxParser().parse(iter(tokens))
-save_ast_to_json(ast, "test_var_decl.json")
-
+# # ----------------------------------------------
+# # 1. Prueba de asignación
+# # ----------------------------------------------
+# tokens = list(GoxLexer().tokenize("x = 3 + 4 * 2;"))
+# ast = GoxParser().parse(iter(tokens))
+# save_ast_to_json(ast, "test_assignment.json")
 
 # # ----------------------------------------------
-# # 3. Prueba de declaración de constante
+# # 2. Prueba de declaración de variable
 # # ----------------------------------------------
-tokens = list(GoxLexer().tokenize("const y float = 3.14;"))
-ast = GoxParser().parse(iter(tokens))
-save_ast_to_json(ast, "test_const_decl.json")
+# tokens = list(GoxLexer().tokenize("var x int = 5;"))
+# ast = GoxParser().parse(iter(tokens))
+# save_ast_to_json(ast, "test_var_decl.json")
+
+
+# # # ----------------------------------------------
+# # # 3. Prueba de declaración de constante
+# # # ----------------------------------------------
+# tokens = list(GoxLexer().tokenize("const y float = 3.14;"))
+# ast = GoxParser().parse(iter(tokens))
+# save_ast_to_json(ast, "test_const_decl.json")
 
 # text = '''
 

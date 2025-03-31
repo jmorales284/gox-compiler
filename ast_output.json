@@ -1,0 +1,98 @@
+{
+    "statements": [
+        {
+            "name": "x",
+            "type": "int",
+            "value": {
+                "value": 10
+            },
+            "is_const": false
+        },
+        {
+            "name": "PI",
+            "type": "float",
+            "value": {
+                "value": 3.1416
+            },
+            "is_const": true
+        },
+        {
+            "name": "flag",
+            "type": "bool",
+            "value": {
+                "value": "true"
+            },
+            "is_const": false
+        },
+        {
+            "name": "ch",
+            "type": "char",
+            "value": {
+                "value": "'A'"
+            },
+            "is_const": false
+        },
+        {
+            "name": "sum",
+            "parameters": [
+                {
+                    "name": "a",
+                    "type": "int"
+                },
+                {
+                    "name": "b",
+                    "type": "int"
+                }
+            ],
+            "return_type": "int",
+            "body": [
+                {
+                    "expression": {
+                        "operator": "+",
+                        "left": {
+                            "location": {
+                                "name": "a"
+                            }
+                        },
+                        "right": {
+                            "location": {
+                                "name": "b"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "test": {
+                "operator": ">",
+                "left": {
+                    "location": {
+                        "name": "x"
+                    }
+                },
+                "right": {
+                    "value": 5
+                }
+            },
+            "consequence": [
+                {
+                    "expression": {
+                        "location": {
+                            "name": "x"
+                        }
+                    }
+                }
+            ],
+            "alternative": [
+                {
+                    "expression": {
+                        "location": {
+                            "name": "x"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
