@@ -35,7 +35,7 @@ class GoxLexer(sly.Lexer):
     ]
 
     # Caracteres literales que se reconocen directamente
-    literals = "+-*/=<>(){};,^"
+    literals = "+-*/%=<>(){};,^"
 
     # Ignorar espacios y tabulaciones
     ignore = " \t"
