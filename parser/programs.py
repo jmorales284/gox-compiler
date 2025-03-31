@@ -15,7 +15,7 @@
 # cada parte. Es posible que se haga referencia a partes de este archivo 
 # en partes posteriores del proyecto. Planifique tener muchos debates.
 #
-from model import *
+from gmodel import *
 
 # ---------------------------------------------------------------------
 # Expression Simple
@@ -24,10 +24,11 @@ from model import *
 
 expr_source = "2 + 3 * 4"
 
-expr_model = BinaryOp('+', int(2),
-                        BinaryOp('*', int(3),
-                        int(4)))
+expr_model = BinaryOp('+', Integer(2),
+                        BinaryOp('*', Integer(3),
+                        Integer(4)))
 
+print(expr_model)
 # ---------------------------------------------------------------------
 # Programa 1: Printing
 #
@@ -40,12 +41,13 @@ source1 = '''
 '''
 
 model1 = Program([
-    Print(BinaryOp('+', int(2), BinaryOp('*', int(3), UnaryOp('-', int(4))))),
-    Print(BinaryOp('-', float(2.0), BinaryOp('/', float(3.0), UnaryOp('-', float(4.0))))),
-    Print(BinaryOp('+', UnaryOp('-', int(2)), int(3)))
+    Print(BinaryOp('+', Integer(2), BinaryOp('*', Integer(3), UnaryOp('-', Integer(4))))),
+    Print(BinaryOp('-', Float(2.0), BinaryOp('/', Float(3.0), UnaryOp('-', Float(4.0))))),
+    Print(BinaryOp('+', UnaryOp('-', Integer(2)), Integer(3)))
 ])
 
 
+print(model1)
 
 
 # ---------------------------------------------------------------------
@@ -62,12 +64,15 @@ source2 = '''
 '''
 
 model2 = Program([
-    ConstDeclaration('pi', float, Literal(3.14159)),
-    VarDeclaration('tau', float),
-    Assignment('tau', BinaryOp('*', Literal(2.0), Constant('pi'))),
-    Print(Variable('tau'))
+    ConstDeclaration('pi', Float(3.14159)),  # Ahora infiere que es float automáticamente
+    VariableDeclaration('tau', 'float'),
+    Assignment(VariableReference('tau'), BinaryOp('*', Float(2.0), ConstantReference('pi'))),
+    Print(VariableReference('tau'))
 ])
 
+
+
+print(model2)
 
 # ---------------------------------------------------------------------
 # Programa 3: Condicionales. Este programa imprime el mínimo de 
@@ -84,14 +89,18 @@ source3 = '''
         print b;
     }
 '''
-model3= Program([
-    VarDeclaration('a', int, Literal(2)),
-    VarDeclaration('b', int, Literal(3)),
-    Conditional(BinaryOp('<', Variable('a'), Variable('b')),
-                Print(Variable('a')),
-                Print(Variable('b')))
+model3 = Program([
+    VariableDeclaration('a', 'int', Integer(2)),
+    VariableDeclaration('b', 'int', Integer(3)),
+    If(
+        BinaryOp('<', VariableReference('a'), VariableReference('b')),
+        Print(VariableReference('a')),
+        Print(VariableReference('b'))
+    )
 ])
 
+
+print(model3)
 
 
 
@@ -112,18 +121,21 @@ source4 = '''
 '''
 
 model4 = Program([
-    ConstDeclaration('n', int, Literal(10)),
-    VarDeclaration('x', int, Literal(1)),
-    VarDeclaration('fact', int, Literal(1)),
-    WhileLoop(BinaryOp('<', Variable('x'), Constant('n')),
-            [
-                Assignment('fact', BinaryOp('*', Variable('fact'), Variable('x'))),
-                Print(Variable('fact')),
-                Assignment('x', BinaryOp('+', Variable('x'), Literal(1)))
-            ])
+    ConstDeclaration('n', Integer(10)),
+    VariableDeclaration('x', 'int', Integer(1)),
+    VariableDeclaration('fact', 'int', Integer(1)),
+
+    While(
+        BinaryOp('<', VariableReference('x'), ConstantReference('n')),
+        [
+            Assignment('fact', BinaryOp('*', VariableReference('fact'), VariableReference('x'))),
+            Print(VariableReference('fact')),
+            Assignment('x', BinaryOp('+', VariableReference('x'), Integer(1)))
+        ]
+    )
 ])
 
-
+print(model4)
 
 # ---------------------------------------------------------------------
 # Programa 5: Funciones (simple)
@@ -138,10 +150,13 @@ source5 = '''
 '''
 
 model5 = Program([
-    Function('square', [Parameter('x', int)], int, Return(BinaryOp('*', Variable('x'), Variable('x')))),
-    Print(FunctionCall('square', [Literal(4)])),
-    Print(FunctionCall('square', [Literal(10)]))
+    FunctionDefinition('square', [Parameter('x', 'int')], 'int',
+                        Return(BinaryOp('*', VariableReference('x'), VariableReference('x')))),
+    Print(FunctionCall('square', [Integer(4)])),
+    Print(FunctionCall('square', [Integer(10)]))
 ])
+
+print(model5)
 
 # ---------------------------------------------------------------------
 # Programa 6: Funciones (complejas)
@@ -159,21 +174,26 @@ source6 = '''
 
     print(fact(10));
 '''
-Return
 
 model6 = Program([
-    Function('fact', [Parameter('n', int)], int, [
-        VarDeclaration('x', int, Literal(1)),
-        VarDeclaration('result', int, Literal(1)),
-        WhileLoop(BinaryOp('<', Variable('x'), Variable('n')),
+    FunctionDefinition('fact', [Parameter('n', 'int')], 'int', [
+        VariableDeclaration('x', 'int', Integer(1)),
+        VariableDeclaration('result', 'int', Integer(1)),
+
+        While(
+            BinaryOp('<', VariableReference('x'), VariableReference('n')),
             [
-                Assignment('result', BinaryOp('*', Variable('result'), Variable('x'))),
-                Assignment('x', BinaryOp('+', Variable('x'), Literal(1)))
-            ]),
-        Return(Variable('result'))
+                Assignment('result', BinaryOp('*', VariableReference('result'), VariableReference('x'))),
+                Assignment('x', BinaryOp('+', VariableReference('x'), Integer(1)))
+            ]
+        ),
+
+        Return(VariableReference('result'))
     ]),
-    Print(FunctionCall('fact', [Literal(10)]))
+
+    Print(FunctionCall('fact', [Integer(10)]))
 ])
+
         
 
 print(model6)
@@ -191,12 +211,12 @@ source7 = '''
 '''
 
 model7 = Program([
-    VarDeclaration('pi', float, Literal(3.14159)),
-    VarDeclaration('spam', int, Literal(42)),
-    Print(BinaryOp('*', Variable('spam'), FunctionCall('int', [Variable('pi')]))),
-    Print(BinaryOp('*', FunctionCall('float', [Variable('spam')]), Variable('pi'))),
-    Print(BinaryOp('*', FunctionCall('int', [Variable('spam')]), FunctionCall('int', [Variable('pi')]))
-    )
+    VariableDeclaration('pi', 'float', Float(3.14159)),
+    VariableDeclaration('spam', 'int', Integer(42)),
+
+    Print(BinaryOp('*', VariableReference('spam'), TypeCast('int', VariableReference('pi')))),
+    Print(BinaryOp('*', TypeCast('float', VariableReference('spam')), VariableReference('pi'))),
+    Print(BinaryOp('*', TypeCast('int', VariableReference('spam')), TypeCast('int', VariableReference('pi'))))
 ])
 
 print(model7)
@@ -212,10 +232,12 @@ source8 = '''
 '''
 
 model8 = Program([
-    VarDeclaration('x', int, Memory(8192)),
-    VarDeclaration('addr', int, Literal(1234)),
-    MemoryAssignmentLocation('addr', Literal(5678)),
-    Print(BinaryOp('+', Memory('addr'), Literal(8)))
+    VariableDeclaration('x', 'int', Memory(8192)),  # Reserva memoria
+    VariableDeclaration('addr', 'int', Integer(1234)),  # Variable addr con valor inicial
+    MemoryAssignmentLocation('addr', Integer(5678)),  # `addr = 5678;
+    Print(BinaryOp('+', MemoryReadLocation('addr'), Integer(8)))  # print(`addr + 8);
 ])
+
+
 
 print(model8)
