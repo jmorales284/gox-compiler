@@ -15,7 +15,7 @@
 # cada parte. Es posible que se haga referencia a partes de este archivo 
 # en partes posteriores del proyecto. Planifique tener muchos debates.
 #
-from model import *
+from gmodel import *
 
 # ---------------------------------------------------------------------
 # Expression Simple
