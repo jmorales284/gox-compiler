@@ -1,0 +1,82 @@
+{
+    "statements": [
+        {
+            "name": "x",
+            "type": "int",
+            "value": {
+                "value": 10
+            },
+            "is_const": false
+        },
+        {
+            "name": "y",
+            "type": "float",
+            "value": {
+                "value": 3.14
+            },
+            "is_const": true
+        },
+        {
+            "name": "add",
+            "parameters": [
+                {
+                    "name": "a",
+                    "type": "int"
+                },
+                {
+                    "name": "b",
+                    "type": "int"
+                }
+            ],
+            "return_type": "int",
+            "body": [
+                {
+                    "expression": {
+                        "operator": "+",
+                        "left": {
+                            "location": {
+                                "name": "a"
+                            }
+                        },
+                        "right": {
+                            "location": {
+                                "name": "b"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "test": {
+                "operator": ">",
+                "left": {
+                    "location": {
+                        "name": "x"
+                    }
+                },
+                "right": {
+                    "value": 10
+                }
+            },
+            "consequence": [
+                {
+                    "expression": {
+                        "location": {
+                            "name": "x"
+                        }
+                    }
+                }
+            ],
+            "alternative": [
+                {
+                    "expression": {
+                        "location": {
+                            "name": "y"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
