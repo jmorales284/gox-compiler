@@ -326,26 +326,48 @@ def save_ast_to_json(ast, filename="ast_output.json"):
     with open(filename, "w") as f:
         f.write(ast_json)
 
+#Prueba rápida de la gramática
+data = '''
+var x int = 10;
+const y float = 3.14;
+func add(a int, b int) int { return a + b; }
+if x > 10 { print x; } else { print y; }
+'''
+tokens = list(GoxLexer().tokenize(data))
+ast = GoxParser().parse(iter(tokens))
+save_ast_to_json(ast, "ast_output.json")
 
-# # ----------------------------------------------
-# # 1. Prueba de asignación
-# # ----------------------------------------------
-# tokens = list(GoxLexer().tokenize("x = 3 + 4 * 2;"))
-# ast = GoxParser().parse(iter(tokens))
-# save_ast_to_json(ast, "test_assignment.json")
+
+# ----------------------------------------------
+# 1. Prueba de asignación
+# ----------------------------------------------
+tokens = list(GoxLexer().tokenize("x = 3 + 4 * 2;"))
+ast = GoxParser().parse(iter(tokens))
+save_ast_to_json(ast, "test_assignment.json")
 
 # ----------------------------------------------
 # 2. Prueba de declaración de variable
 # ----------------------------------------------
-
-text = '''
-
-func simple() {
-    print (hola);
-}
-
-simple();
-'''
-tokens = list(GoxLexer().tokenize(text))
+tokens = list(GoxLexer().tokenize("var x int = 5;"))
 ast = GoxParser().parse(iter(tokens))
 save_ast_to_json(ast, "test_var_decl.json")
+
+
+# # ----------------------------------------------
+# # 3. Prueba de declaración de constante
+# # ----------------------------------------------
+tokens = list(GoxLexer().tokenize("const y float = 3.14;"))
+ast = GoxParser().parse(iter(tokens))
+save_ast_to_json(ast, "test_const_decl.json")
+
+# text = '''
+
+# func simple() {
+#     print (hola);
+# }
+
+# simple();
+# '''
+# tokens = list(GoxLexer().tokenize(text))
+# ast = GoxParser().parse(iter(tokens))
+# save_ast_to_json(ast, "test_var_decl.json")
