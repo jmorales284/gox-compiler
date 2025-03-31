@@ -14,7 +14,7 @@ func isprime(n int) bool {
     }
     var i int = 2;
     while i * i <= n {
-        //if n % i == 0 {
+        if n % i == 0 {
             return false;
         }
         i = i + 1;
@@ -22,12 +22,12 @@ func isprime(n int) bool {
     return true;
 }
 
-func factorize(n int) {
+func factorize(n int) void {
     var factor int = 2;
-    //print "factores primos de " + n + ": ";
+    print "factores primos de " + n + ": ";
 
     while n > 1 {
-        while n * factor == 0 {
+        while n % factor == 0 {  // El error aquí era `n * factor == 0`
             print factor;
             n = n / factor;
         }
@@ -35,5 +35,5 @@ func factorize(n int) {
     }
 }
 
-var num int = 21;
-factorize(num);
+isprime(2); // true
+factorize(21); // 3 7
