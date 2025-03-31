@@ -13,15 +13,16 @@ class GoxParser(sly.Parser):
     debugfile = 'debug.txt'
 
     precedence = (
-        ('right', '='),                 # Asignación (evaluada de derecha a izquierda)
-        ('left', 'LOR'),                # OR lógico (evaluada de izquierda a derecha)
+        ('right', '='),                 # Asignación
+        ('left', 'LOR'),                # OR lógico (más baja precedencia)
         ('left', 'LAND'),               # AND lógico
-        ('nonassoc', 'EQ', 'NE'),       # Comparación de igualdad (sin asociatividad)
-        ('nonassoc', 'LT', 'GT', 'LE', 'GE'),  # Comparaciones (<, >, <=, >=)
-        ('left', '+', '-'),             # Suma/resta
-        ('left', '*', '/', '%'),        # Multiplicación/división/módulo
-        ('right', 'UMINUS'),            # Operadores unarios (evaluados de derecha a izquierda)
-        ('nonassoc', '(')               # Agrupación (paréntesis)
+        ('nonassoc', 'EQ', 'NE'),       # Comparación de igualdad (no asociativos)
+        ('nonassoc', 'LT', 'GT', 'LE', 'GE'),  # Operadores relacionales
+        ('left', '+', '-'),             # Suma y resta
+        ('left', '*', '/', '%'),        # Multiplicación, división y módulo
+        ('right', 'UMINUS', 'BACKTICK'),   # Operadores unarios
+        ('nonassoc', '(' , ')'),          # Agrupación y acceso
+        ('left', 'CALL'),               # Llamadas a funciones
     )
 
 
@@ -77,6 +78,7 @@ class GoxParser(sly.Parser):
         Declaración de funciones.
         """
         return p.funcdecl
+    
 
     @_('if_stmt')
     def statement(self, p):
@@ -113,12 +115,12 @@ class GoxParser(sly.Parser):
         """
         return Return(p.expression)
 
-    @_('PRINT expression ";"')
+    @_('print_stmt')
     def statement(self, p):
         """
         Sentencia print para imprimir una expresión.
         """
-        return Print(p.expression)
+        return p.print_stmt
 
     # vardecl <- ('var'/'const') ID type? ('=' expression)? ';'
     @_('VAR ID opt_type opt_init ";"')
@@ -169,27 +171,14 @@ class GoxParser(sly.Parser):
     def assignment(self, p):
         return Assignment(p.location, p.expression)
 
-    # Declaración de funciones
-    @_('FUNC ID "(" parameters_opt ")" type_opt "{" statement_list "}"')
+    @_('IMPORT FUNC ID "(" parameters_opt ")" type_opt ";"',
+       'FUNC ID "(" parameters_opt ")" type_opt "{" statement_list "}"')
     def funcdecl(self, p):
-        return FunctionDef(p.ID, p.parameters_opt, p.type_opt, p.statement_list)
+        if len(p) == 8:  # Versión con cuerpo
+            return FunctionDef(p[1], p[3], p[5], p[7])
+        else:  # Versión importada
+            return ImportFunction(p[2], p[4], p[6])
 
-    @_('opt_import FUNC ID "(" parameters_opt ")" type_opt "{" statement_list "}"')
-    def funcdecl(self, p):
-        if p.opt_import:
-            return ImportFunction(p.ID, p.parameters_opt, p.type_opt)
-        return FunctionDef(p.ID, p.parameters_opt, p.type_opt, p.statement_list)
-    
-        
-    
-    @_('IMPORT')
-    def opt_import(self, p):
-        return True
-    
-    @_('')
-    def opt_import(self, p):
-        return False
-    
     @_('parameters')
     def parameters_opt(self, p):
         return p.parameters
@@ -238,23 +227,32 @@ class GoxParser(sly.Parser):
         return 'bool'
     
 
-    # Sentencias if
-    @_('IF expression "{" statement_list "}" ELSE "{" statement_list "}"')
-    def if_stmt(self, p):
-        return If(p.expression, p.statement_list0, p.statement_list1)
+    @_('"{" statement_list "}"')
+    def block(self, p):
+        """
+        Bloque de código delimitado por llaves.
+        """
+        return p.statement_list
     
-    @_('IF expression "{" statement_list "}"')
+
+    # Sentencias if
+    @_('IF expression block')
     def if_stmt(self, p):
-        return If(p.expression, p.statement_list, None)
+        return If(p.expression, p.block, None)
+    
+    @_('IF expression block ELSE block')
+    def if_stmt(self, p):
+        return If(p.expression, p.block0, p.block1)
 
     # Sentencias while
-    @_('WHILE expression "{" statement_list "}"')
+
+    @_('WHILE expression block')
     def while_stmt(self, p):
-        return While(p.expression, p.statement_list)
+        return While(p.expression, p.block)
     
 
-    @_('PRINT "(" expression ")" ";"') 
-    def statement(self, p):
+    @_('PRINT expression ";"') 
+    def print_stmt(self, p):
         return Print(p.expression)
 
     #Ubicaciones
@@ -262,12 +260,46 @@ class GoxParser(sly.Parser):
     def location(self, p):
         return VarLocation(p.ID)
 
-    @_('"`" expression')
+    @_('BACKTICK primary')
     def location(self, p):
-        return MemoryAddress(p.expression)
-    
-
+        return MemoryAddress(p.primary)
+        
     # Expresiones
+    @_("expression LOR expression")
+    def expression(self, p):
+        return BinaryOp("||", p.expression0, p.expression1)
+
+    @_("expression LAND expression")
+    def expression(self, p):
+        return BinaryOp("&&", p.expression0, p.expression1)
+
+    # Operadores de comparación (igualdad)
+    @_("expression EQ expression")
+    def expression(self, p):
+        return BinaryOp("==", p.expression0, p.expression1)
+
+    @_("expression NE expression")
+    def expression(self, p):
+        return BinaryOp("!=", p.expression0, p.expression1)
+
+    # Operadores relacionales
+    @_("expression LT expression")
+    def expression(self, p):
+        return BinaryOp("<", p.expression0, p.expression1)
+
+    @_("expression GT expression")
+    def expression(self, p):
+        return BinaryOp(">", p.expression0, p.expression1)
+
+    @_("expression LE expression")
+    def expression(self, p):
+        return BinaryOp("<=", p.expression0, p.expression1)
+
+    @_("expression GE expression")
+    def expression(self, p):
+        return BinaryOp(">=", p.expression0, p.expression1)
+
+    # Operadores aritméticos
     @_('expression "+" expression')
     def expression(self, p):
         return BinaryOp('+', p.expression0, p.expression1)
@@ -283,63 +315,39 @@ class GoxParser(sly.Parser):
     @_('expression "/" expression')
     def expression(self, p):
         return BinaryOp('/', p.expression0, p.expression1)
-    
+
     @_('expression "%" expression')
     def expression(self, p):
         return BinaryOp('%', p.expression0, p.expression1)
 
+    # Operador unario (manteniendo tu sintaxis)
     @_('"-" expression %prec UMINUS')
     def expression(self, p):
         return UnaryOp('-', p.expression)
-    
-    @_("expression LT expression")
-    def expression(self, p):
-        return BinaryOp("<", p.expression0, p.expression1)
-    
-    @_("expression GT expression")
-    def expression(self, p):
-        return BinaryOp(">", p.expression0, p.expression1)
-    
-    @_("expression LE expression")
-    def expression(self, p):
-        return BinaryOp("<=", p.expression0, p.expression1)
-    
-    @_("expression GE expression")
-    def expression(self, p):
-        return BinaryOp(">=", p.expression0, p.expression1)
-    
-    @_("expression EQ expression")
-    def expression(self, p):
-        return BinaryOp("==", p.expression0, p.expression1)
-    
-    @_("expression NE expression")
-    def expression(self, p):
-        return BinaryOp("!=", p.expression0, p.expression1)
-    
-    @_("expression LAND expression")
-    def expression(self, p):
-        return BinaryOp("&&", p.expression0, p.expression1)
-    
-    @_("expression LOR expression")
-    def expression(self, p):
-        return BinaryOp("||", p.expression0, p.expression1)
 
+    # Expresiones primarias (debes mantener estas también)
+    @_('function_call')
+    def expression(self, p):
+        """
+        Llamada a una función.
+        """
+        return p.function_call
 
     @_('"(" expression ")"')
-    def expression(self, p):
+    def primary(self, p):
         return p.expression
-
-    @_('type "(" expression ")"')
-    def expression(self, p):
-        return TypeConversion(p.type, p.expression)
-
-    @_('ID "(" arguments_opt ")"')
-    def expression(self, p):
-        return FunctionCall(p.ID, p.arguments_opt)
-
+    
     @_('location')
+    def primary(self, p):
+        return p.location
+    
+    @_('primary')
     def expression(self, p):
-        return LocationExpr(p.location)
+        return p.primary
+
+    @_('ID "(" arguments_opt ")" %prec CALL')
+    def function_call(self, p):
+        return FunctionCall(p.ID, p.arguments_opt)
 
     @_('INTEGER')
     def expression(self, p):
@@ -358,17 +366,23 @@ class GoxParser(sly.Parser):
         return LiteralBool(p.BOOL)
 
     # Argumentos
-    @_('expression { "," expression }')
-    def arguments(self, p):
-        return [p.expression0] + p.expression1
 
     @_('arguments')
     def arguments_opt(self, p):
         return p.arguments
-
+    
     @_('')
     def arguments_opt(self, p):
         return []
+    
+    @_('expression')
+    def arguments(self, p):
+        return [p.expression]
+    
+    @_('arguments "," expression')
+    def arguments(self, p):
+        return p.arguments + [p.expression]
+        
     
 
     # Manejo de errores
@@ -397,26 +411,45 @@ def save_ast_to_json(ast, filename="ast_output.json"):
 
 #Prueba rápida de la gramática
 data = '''
-// Declaración de variables y constantes
-var x int = 10;
-const PI float = 3.1416;
-var flag bool = true;
-var ch char = 'A';
+/* ******************************************************************* *
+ *                                                                     *
+ * factorize.gox  (compilador gox)                                     *
+ *                                                                     *
+ * Dado un numero N, lo descompone en sus factores primos.             *
+ * Ejemplo: 21 = 3x7                                                   *
+ *                                                                     *
+ ********************************************************************* *
+ */
 
-// Función con parámetros y retorno
-func sum(a int, b int) int {
-    return a + b;
+func isprime(n int) bool {
+    if n < 2 {
+        return false;
+    }
+    var i int = 2;
+    while i * i <= n {
+        if n * i == 0 {
+            return false;
+        }
+        i = i + 1;
+    }
+    return true;
 }
 
-// Uso de `if-else`
-if x > 5 {
-    print (x);
-} else {
-    print (x);
+func factorize(n int) {
+    var factor int = 2;
+    //print "factores primos de " + n + ": ";
+
+    while n > 1 {
+        while n * factor == 0 {  // El error aquí era `n * factor == 0`
+            print factor;
+            n = n / factor;
+        }
+        factor = factor + 1;
+    }
 }
 
 
-
+const n int = isprime(2); 
 '''
 tokens = list(GoxLexer().tokenize(data))
 ast = GoxParser().parse(iter(tokens))

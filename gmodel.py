@@ -68,7 +68,6 @@
 
 from typing import List, Union, Optional
 from dataclasses import dataclass
-from multimethod import multimethod
 
 from typing import List, Optional
 from dataclasses import dataclass

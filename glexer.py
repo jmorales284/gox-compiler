@@ -31,7 +31,7 @@ class GoxLexer(sly.Lexer):
         "CONST", "VAR", "FUNC", "IF", "ELSE", "WHILE", "BREAK", "CONTINUE",
         "RETURN", "PRINT", "IMPORT", "INT_TYPE", "FLOAT_TYPE", "CHAR_TYPE", "BOOL_TYPE",
         "LE", "GE", "EQ", "NE", "LAND", "LOR", "LT", "GT",
-        "ID", "FLOAT", "INTEGER", "CHAR", "BOOL",
+        "ID", "FLOAT", "INTEGER", "CHAR", "BOOL", "BACKTICK",
     ]
 
     # Caracteres literales que se reconocen directamente
@@ -73,7 +73,7 @@ class GoxLexer(sly.Lexer):
     LOR = r"\|\|"
     LT = r"<"
     GT = r">"
-
+    BACKTICK = r"`"
     # Identificadores y palabras clave
     ID = r"[a-zA-Z_]\w*"
 
