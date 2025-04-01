@@ -244,6 +244,7 @@ class ImportFunction(Declaration):
     name: str
     parameters: List[Parameter]
     return_type: str
+    body: List[Statement]
 
 # Parte 3. Expressions
 # Las expresiones representan elementos que se evalúan y producen un valor concreto.

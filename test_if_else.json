@@ -1,0 +1,29 @@
+{
+    "statements": [
+        {
+            "test": {
+                "operator": ">",
+                "left": {
+                    "name": "x"
+                },
+                "right": {
+                    "value": 10
+                }
+            },
+            "consequence": [
+                {
+                    "expression": {
+                        "name": "x"
+                    }
+                }
+            ],
+            "alternative": [
+                {
+                    "expression": {
+                        "name": "y"
+                    }
+                }
+            ]
+        }
+    ]
+}

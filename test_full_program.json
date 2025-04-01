@@ -1,0 +1,98 @@
+{
+    "statements": [
+        {
+            "name": "main",
+            "parameters": [],
+            "return_type": null,
+            "body": [
+                {
+                    "name": "x",
+                    "type": "int",
+                    "value": {
+                        "value": 10
+                    },
+                    "is_const": false
+                },
+                {
+                    "name": "y",
+                    "type": "int",
+                    "value": {
+                        "value": 20
+                    },
+                    "is_const": false
+                },
+                {
+                    "name": "result",
+                    "type": "int",
+                    "value": {
+                        "operator": "+",
+                        "left": {
+                            "name": "x"
+                        },
+                        "right": {
+                            "name": "y"
+                        }
+                    },
+                    "is_const": false
+                },
+                {
+                    "test": {
+                        "operator": ">",
+                        "left": {
+                            "name": "result"
+                        },
+                        "right": {
+                            "value": 15
+                        }
+                    },
+                    "consequence": [
+                        {
+                            "expression": {
+                                "value": 15
+                            }
+                        }
+                    ],
+                    "alternative": [
+                        {
+                            "expression": {
+                                "name": "result"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "test": {
+                        "operator": ">",
+                        "left": {
+                            "name": "x"
+                        },
+                        "right": {
+                            "value": 0
+                        }
+                    },
+                    "body": [
+                        {
+                            "expression": {
+                                "name": "x"
+                            }
+                        },
+                        {
+                            "location": {
+                                "name": "x"
+                            },
+                            "expression": {
+                                "operator": "-",
+                                "left": {
+                                    "name": "x"
+                                },
+                                "right": {
+                                    "value": 1
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -19,7 +19,7 @@ class GoxParser(sly.Parser):
         ('nonassoc', 'EQ', 'NE'),       # Comparación de igualdad (no asociativos)
         ('nonassoc', 'LT', 'GT', 'LE', 'GE'),  # Operadores relacionales
         ('left', '+', '-'),             # Suma y resta
-        ('left', '*', '/', '%'),        # Multiplicación, división y módulo
+        ('left', '*', '/'),        # Multiplicación, división y módulo
         ('right', 'UMINUS', 'BACKTICK'),   # Operadores unarios
         ('nonassoc', '(' , ')'),          # Agrupación y acceso
         ('left', 'CALL'),               # Llamadas a funciones
@@ -171,13 +171,21 @@ class GoxParser(sly.Parser):
     def assignment(self, p):
         return Assignment(p.location, p.expression)
 
-    @_('IMPORT FUNC ID "(" parameters_opt ")" type_opt ";"',
-       'FUNC ID "(" parameters_opt ")" type_opt "{" statement_list "}"')
+    # Declaración de funciones
+    @_('opt_import FUNC ID "(" parameters_opt ")" type_opt "{" statement_list "}"')
     def funcdecl(self, p):
-        if len(p) == 8:  # Versión con cuerpo
-            return FunctionDef(p[1], p[3], p[5], p[7])
-        else:  # Versión importada
-            return ImportFunction(p[2], p[4], p[6])
+        if p.opt_import:
+            return ImportFunction(p.ID, p.parameters_opt, p.type_opt, p.statement_list)
+        return FunctionDef(p.ID, p.parameters_opt, p.type_opt, p.statement_list)
+  
+ 
+    @_('IMPORT')
+    def opt_import(self, p):
+         return True
+    
+    @_('')
+    def opt_import(self, p):
+        return False
 
     @_('parameters')
     def parameters_opt(self, p):
@@ -209,6 +217,8 @@ class GoxParser(sly.Parser):
         return Parameter(p.ID, p.type)
 
 
+
+
     # Tipos
     @_('INT_TYPE')
     def type(self, p):
@@ -225,6 +235,9 @@ class GoxParser(sly.Parser):
     @_('BOOL_TYPE')
     def type(self, p):
         return 'bool'
+    
+
+
     
 
     @_('"{" statement_list "}"')
@@ -320,12 +333,12 @@ class GoxParser(sly.Parser):
     def expression(self, p):
         return BinaryOp('%', p.expression0, p.expression1)
 
-    # Operador unario (manteniendo tu sintaxis)
+
     @_('"-" expression %prec UMINUS')
     def expression(self, p):
         return UnaryOp('-', p.expression)
 
-    # Expresiones primarias (debes mantener estas también)
+
     @_('function_call')
     def expression(self, p):
         """
@@ -393,58 +406,6 @@ class GoxParser(sly.Parser):
             print("Syntax error at EOF")
 
 
-import json
-
-def ast_to_dict(node):
-    if isinstance(node, list):
-        return [ast_to_dict(item) for item in node]
-    elif hasattr(node, "__dict__"):
-        return {key: ast_to_dict(value) for key, value in node.__dict__.items()}
-    else:
-        return node
-
-
-def save_ast_to_json(ast, filename="ast_output.json"):
-    ast_json = json.dumps(ast_to_dict(ast), indent=4)
-    with open(filename, "w") as f:
-        f.write(ast_json)
-
-#Prueba rápida de la gramática
-data = '''
-
-func isprime(n int) bool {
-    if n < 2 {
-        return false;
-    }
-    var i int = 2;
-    while i * i <= n {
-        if n * i == 0 {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-func factorize(n int) {
-    var factor int = 2;
-    //print "factores primos de " + n + ": ";
-
-    while n > 1 {
-        while n * factor == 0 {  // El error aquí era `n * factor == 0`
-            print factor;
-            n = n / factor;
-        }
-        factor = factor + 1;
-    }
-}
-
-
-const n int = isprime(2); 
-'''
-tokens = list(GoxLexer().tokenize(data))
-ast = GoxParser().parse(iter(tokens))
-save_ast_to_json(ast, "ast_output.json")
 
 
 # # ----------------------------------------------

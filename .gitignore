@@ -5,6 +5,7 @@ node_modules/
 .env
 .entorno
 entorno/
+Proba
 
 # Ignorar archivos temporales de sistema operativo
 *.log
