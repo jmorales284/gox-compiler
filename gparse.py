@@ -339,12 +339,7 @@ def save_ast_to_json(ast, filename="ast_output.json"):
 # ----------------------------------------------
 
 text = '''
-
-func simple() {
-    print (hola);
-}
-
-simple();
+var x int = 4;
 '''
 tokens = list(GoxLexer().tokenize(text))
 ast = GoxParser().parse(iter(tokens))
