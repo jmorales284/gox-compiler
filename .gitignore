@@ -1,0 +1,19 @@
+# Ignorar todos los archivos dentro de la carpeta "node_modules"
+node_modules/
+
+# Ignorar archivos de configuración de entorno
+.env
+.entorno
+entorno/
+
+# Ignorar archivos temporales de sistema operativo
+*.log
+.DS_Store
+Thumbs.db
+
+# Ignorar dependencias generadas por Python
+*.pyc
+__pycache__/
+
+# Ignorar archivos específicos
+secret-key.txt
