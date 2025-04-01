@@ -1,0 +1,27 @@
+{
+    "statements": [
+        {
+            "name": "external_func",
+            "parameters": [
+                {
+                    "name": "a",
+                    "type": "int"
+                }
+            ],
+            "return_type": "int"
+        },
+        {
+            "name": "result",
+            "type": "int",
+            "value": {
+                "name": "external_func",
+                "arguments": [
+                    {
+                        "value": 5
+                    }
+                ]
+            },
+            "is_const": false
+        }
+    ]
+}

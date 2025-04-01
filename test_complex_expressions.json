@@ -1,0 +1,86 @@
+{
+    "statements": [
+        {
+            "name": "result",
+            "type": "int",
+            "value": {
+                "operator": "-",
+                "left": {
+                    "operator": "+",
+                    "left": {
+                        "value": 3
+                    },
+                    "right": {
+                        "operator": "*",
+                        "left": {
+                            "value": 4
+                        },
+                        "right": {
+                            "value": 2
+                        }
+                    }
+                },
+                "right": {
+                    "operator": "%",
+                    "left": {
+                        "operator": "/",
+                        "left": {
+                            "value": 10
+                        },
+                        "right": {
+                            "operator": "-",
+                            "left": {
+                                "value": 5
+                            },
+                            "right": {
+                                "value": 3
+                            }
+                        }
+                    },
+                    "right": {
+                        "value": 2
+                    }
+                }
+            },
+            "is_const": false
+        },
+        {
+            "name": "is_valid",
+            "type": "bool",
+            "value": {
+                "operator": "&&",
+                "left": {
+                    "operator": "&&",
+                    "left": {
+                        "operator": "||",
+                        "left": {
+                            "value": "true"
+                        },
+                        "right": {
+                            "value": "false"
+                        }
+                    },
+                    "right": {
+                        "operator": ">",
+                        "left": {
+                            "value": 3
+                        },
+                        "right": {
+                            "value": 2
+                        }
+                    }
+                },
+                "right": {
+                    "operator": "<",
+                    "left": {
+                        "value": 5
+                    },
+                    "right": {
+                        "value": 4
+                    }
+                }
+            },
+            "is_const": false
+        }
+    ]
+}

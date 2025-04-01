@@ -1,0 +1,49 @@
+{
+    "statements": [
+        {
+            "name": "add",
+            "parameters": [
+                {
+                    "name": "a",
+                    "type": "int"
+                },
+                {
+                    "name": "b",
+                    "type": "int"
+                }
+            ],
+            "return_type": "int",
+            "body": [
+                {
+                    "expression": {
+                        "operator": "+",
+                        "left": {
+                            "location": {
+                                "name": "a"
+                            }
+                        },
+                        "right": {
+                            "location": {
+                                "name": "b"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "greet",
+            "parameters": [],
+            "return_type": null,
+            "body": [
+                {
+                    "expression": {
+                        "location": {
+                            "name": "x"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

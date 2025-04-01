@@ -1,14 +1,220 @@
 {
     "statements": [
         {
-            "name": "(",
-            "parameters": ")",
-            "return_type": "{"
+            "name": "isprime",
+            "parameters": [
+                {
+                    "name": "n",
+                    "type": "int"
+                }
+            ],
+            "return_type": "bool",
+            "body": [
+                {
+                    "test": {
+                        "operator": "<",
+                        "left": {
+                            "location": {
+                                "name": "n"
+                            }
+                        },
+                        "right": {
+                            "value": 2
+                        }
+                    },
+                    "consequence": [
+                        {
+                            "expression": {
+                                "value": "false"
+                            }
+                        }
+                    ],
+                    "alternative": null
+                },
+                {
+                    "name": "i",
+                    "type": "int",
+                    "value": {
+                        "value": 2
+                    },
+                    "is_const": false
+                },
+                {
+                    "test": {
+                        "operator": "<=",
+                        "left": {
+                            "operator": "*",
+                            "left": {
+                                "location": {
+                                    "name": "i"
+                                }
+                            },
+                            "right": {
+                                "location": {
+                                    "name": "i"
+                                }
+                            }
+                        },
+                        "right": {
+                            "location": {
+                                "name": "n"
+                            }
+                        }
+                    },
+                    "body": [
+                        {
+                            "test": {
+                                "operator": "==",
+                                "left": {
+                                    "operator": "*",
+                                    "left": {
+                                        "location": {
+                                            "name": "n"
+                                        }
+                                    },
+                                    "right": {
+                                        "location": {
+                                            "name": "i"
+                                        }
+                                    }
+                                },
+                                "right": {
+                                    "value": 0
+                                }
+                            },
+                            "consequence": [
+                                {
+                                    "expression": {
+                                        "value": "false"
+                                    }
+                                }
+                            ],
+                            "alternative": null
+                        },
+                        {
+                            "location": {
+                                "name": "i"
+                            },
+                            "expression": {
+                                "operator": "+",
+                                "left": {
+                                    "location": {
+                                        "name": "i"
+                                    }
+                                },
+                                "right": {
+                                    "value": 1
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "expression": {
+                        "value": "true"
+                    }
+                }
+            ]
         },
         {
-            "name": "(",
-            "parameters": ")",
-            "return_type": "{"
+            "name": "factorize",
+            "parameters": [
+                {
+                    "name": "n",
+                    "type": "int"
+                }
+            ],
+            "return_type": null,
+            "body": [
+                {
+                    "name": "factor",
+                    "type": "int",
+                    "value": {
+                        "value": 2
+                    },
+                    "is_const": false
+                },
+                {
+                    "test": {
+                        "operator": ">",
+                        "left": {
+                            "location": {
+                                "name": "n"
+                            }
+                        },
+                        "right": {
+                            "value": 1
+                        }
+                    },
+                    "body": [
+                        {
+                            "test": {
+                                "operator": "==",
+                                "left": {
+                                    "operator": "*",
+                                    "left": {
+                                        "location": {
+                                            "name": "n"
+                                        }
+                                    },
+                                    "right": {
+                                        "location": {
+                                            "name": "factor"
+                                        }
+                                    }
+                                },
+                                "right": {
+                                    "value": 0
+                                }
+                            },
+                            "body": [
+                                {
+                                    "expression": {
+                                        "location": {
+                                            "name": "factor"
+                                        }
+                                    }
+                                },
+                                {
+                                    "location": {
+                                        "name": "n"
+                                    },
+                                    "expression": {
+                                        "operator": "/",
+                                        "left": {
+                                            "location": {
+                                                "name": "n"
+                                            }
+                                        },
+                                        "right": {
+                                            "location": {
+                                                "name": "factor"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "location": {
+                                "name": "factor"
+                            },
+                            "expression": {
+                                "operator": "+",
+                                "left": {
+                                    "location": {
+                                        "name": "factor"
+                                    }
+                                },
+                                "right": {
+                                    "value": 1
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+
         },
         {
             "name": "n",
