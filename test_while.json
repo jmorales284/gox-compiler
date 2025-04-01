@@ -1,0 +1,50 @@
+{
+    "statements": [
+        {
+            "name": "i",
+            "type": "int",
+            "value": {
+                "value": 0
+            },
+            "is_const": false
+        },
+        {
+            "test": {
+                "operator": "<",
+                "left": {
+                    "location": {
+                        "name": "i"
+                    }
+                },
+                "right": {
+                    "value": 10
+                }
+            },
+            "body": [
+                {
+                    "expression": {
+                        "location": {
+                            "name": "i"
+                        }
+                    }
+                },
+                {
+                    "location": {
+                        "name": "i"
+                    },
+                    "expression": {
+                        "operator": "+",
+                        "left": {
+                            "location": {
+                                "name": "i"
+                            }
+                        },
+                        "right": {
+                            "value": 1
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

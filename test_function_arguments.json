@@ -1,0 +1,66 @@
+{
+    "statements": [
+        {
+            "name": "sum",
+            "parameters": [
+                {
+                    "name": "a",
+                    "type": "int"
+                },
+                {
+                    "name": "b",
+                    "type": "int"
+                },
+                {
+                    "name": "c",
+                    "type": "int"
+                }
+            ],
+            "return_type": "int",
+            "body": [
+                {
+                    "expression": {
+                        "operator": "+",
+                        "left": {
+                            "operator": "+",
+                            "left": {
+                                "location": {
+                                    "name": "a"
+                                }
+                            },
+                            "right": {
+                                "location": {
+                                    "name": "b"
+                                }
+                            }
+                        },
+                        "right": {
+                            "location": {
+                                "name": "c"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "result",
+            "type": "int",
+            "value": {
+                "name": "sum",
+                "arguments": [
+                    {
+                        "value": 1
+                    },
+                    {
+                        "value": 2
+                    },
+                    {
+                        "value": 3
+                    }
+                ]
+            },
+            "is_const": false
+        }
+    ]
+}

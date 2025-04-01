@@ -397,24 +397,36 @@ def save_ast_to_json(ast, filename="ast_output.json"):
 
 #Prueba rápida de la gramática
 data = '''
-// Declaración de variables y constantes
-var x int = 10;
-const PI float = 3.1416;
-var flag bool = true;
-var ch char = 'A';
 
-// Función con parámetros y retorno
-func sum(a int, b int) int {
-    return a + b;
+func isprime(n int) bool {
+    if n < 2 {
+        return false;
+    }
+    var i int = 2;
+    while i * i <= n {
+        if n * i == 0 {
+            return false;
+        }
+        i = i + 1;
+    }
+    return true;
 }
 
-// Uso de `if-else`
-if x > 5 {
-    print (x);
-} else {
-    print (x);
+func factorize(n int) {
+    var factor int = 2;
+    //print "factores primos de " + n + ": ";
+
+    while n > 1 {
+        while n * factor == 0 {  // El error aquí era `n * factor == 0`
+            print factor;
+            n = n / factor;
+        }
+        factor = factor + 1;
+    }
 }
 
+
+const n int = isprime(2); 
 
 
 '''

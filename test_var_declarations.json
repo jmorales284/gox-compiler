@@ -1,0 +1,34 @@
+{
+    "statements": [
+        {
+            "name": "x",
+            "type": "int",
+            "value": null,
+            "is_const": false
+        },
+        {
+            "name": "y",
+            "type": "float",
+            "value": {
+                "value": 3.14
+            },
+            "is_const": false
+        },
+        {
+            "name": "z",
+            "type": "char",
+            "value": {
+                "value": "'a'"
+            },
+            "is_const": false
+        },
+        {
+            "name": "flag",
+            "type": "bool",
+            "value": {
+                "value": "true"
+            },
+            "is_const": false
+        }
+    ]
+}

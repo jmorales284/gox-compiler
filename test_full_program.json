@@ -1,0 +1,112 @@
+{
+    "statements": [
+        {
+            "name": "main",
+            "parameters": [],
+            "return_type": null,
+            "body": [
+                {
+                    "name": "x",
+                    "type": "int",
+                    "value": {
+                        "value": 10
+                    },
+                    "is_const": false
+                },
+                {
+                    "name": "y",
+                    "type": "int",
+                    "value": {
+                        "value": 20
+                    },
+                    "is_const": false
+                },
+                {
+                    "name": "result",
+                    "type": "int",
+                    "value": {
+                        "operator": "+",
+                        "left": {
+                            "location": {
+                                "name": "x"
+                            }
+                        },
+                        "right": {
+                            "location": {
+                                "name": "y"
+                            }
+                        }
+                    },
+                    "is_const": false
+                },
+                {
+                    "test": {
+                        "operator": ">",
+                        "left": {
+                            "location": {
+                                "name": "result"
+                            }
+                        },
+                        "right": {
+                            "value": 15
+                        }
+                    },
+                    "consequence": [
+                        {
+                            "expression": {
+                                "value": 15
+                            }
+                        }
+                    ],
+                    "alternative": [
+                        {
+                            "expression": {
+                                "location": {
+                                    "name": "result"
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "test": {
+                        "operator": ">",
+                        "left": {
+                            "location": {
+                                "name": "x"
+                            }
+                        },
+                        "right": {
+                            "value": 0
+                        }
+                    },
+                    "body": [
+                        {
+                            "expression": {
+                                "location": {
+                                    "name": "x"
+                                }
+                            }
+                        },
+                        {
+                            "location": {
+                                "name": "x"
+                            },
+                            "expression": {
+                                "operator": "-",
+                                "left": {
+                                    "location": {
+                                        "name": "x"
+                                    }
+                                },
+                                "right": {
+                                    "value": 1
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
