@@ -1,0 +1,12 @@
+{
+    "statements": [
+        {
+            "name": "y",
+            "type": "float",
+            "value": {
+                "value": 3.14
+            },
+            "is_const": true
+        }
+    ]
+}
