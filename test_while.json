@@ -12,9 +12,7 @@
             "test": {
                 "operator": "<",
                 "left": {
-                    "location": {
-                        "name": "i"
-                    }
+                    "name": "i"
                 },
                 "right": {
                     "value": 10
@@ -23,9 +21,7 @@
             "body": [
                 {
                     "expression": {
-                        "location": {
-                            "name": "i"
-                        }
+                        "name": "i"
                     }
                 },
                 {
@@ -35,9 +31,7 @@
                     "expression": {
                         "operator": "+",
                         "left": {
-                            "location": {
-                                "name": "i"
-                            }
+                            "name": "i"
                         },
                         "right": {
                             "value": 1

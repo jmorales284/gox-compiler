@@ -8,20 +8,20 @@
                     "type": "int"
                 }
             ],
-            "return_type": "int"
-        },
-        {
-            "name": "result",
-            "type": "int",
-            "value": {
-                "name": "external_func",
-                "arguments": [
-                    {
-                        "value": 5
+            "return_type": "int",
+            "body": [
+                {
+                    "expression": {
+                        "operator": "*",
+                        "left": {
+                            "name": "a"
+                        },
+                        "right": {
+                            "value": 2
+                        }
                     }
-                ]
-            },
-            "is_const": false
+                }
+            ]
         }
     ]
 }

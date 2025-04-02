@@ -24,20 +24,14 @@
                         "left": {
                             "operator": "+",
                             "left": {
-                                "location": {
-                                    "name": "a"
-                                }
+                                "name": "a"
                             },
                             "right": {
-                                "location": {
-                                    "name": "b"
-                                }
+                                "name": "b"
                             }
                         },
                         "right": {
-                            "location": {
-                                "name": "c"
-                            }
+                            "name": "c"
                         }
                     }
                 }

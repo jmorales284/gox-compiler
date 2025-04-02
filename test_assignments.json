@@ -15,9 +15,7 @@
             "expression": {
                 "operator": "+",
                 "left": {
-                    "location": {
-                        "name": "x"
-                    }
+                    "name": "x"
                 },
                 "right": {
                     "value": 5
@@ -33,14 +31,10 @@
                 "left": {
                     "operator": "*",
                     "left": {
-                        "location": {
-                            "name": "x"
-                        }
+                        "name": "x"
                     },
                     "right": {
-                        "location": {
-                            "name": "y"
-                        }
+                        "name": "y"
                     }
                 },
                 "right": {

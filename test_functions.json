@@ -18,14 +18,10 @@
                     "expression": {
                         "operator": "+",
                         "left": {
-                            "location": {
-                                "name": "a"
-                            }
+                            "name": "a"
                         },
                         "right": {
-                            "location": {
-                                "name": "b"
-                            }
+                            "name": "b"
                         }
                     }
                 }
@@ -38,9 +34,7 @@
             "body": [
                 {
                     "expression": {
-                        "location": {
-                            "name": "x"
-                        }
+                        "name": "x"
                     }
                 }
             ]

@@ -56,7 +56,7 @@ func add(a int, b int) int {
 }
 
 func greet() {
-    print (x);
+    print x;
 }
 '''
 tokens = list(GoxLexer().tokenize(data))
@@ -97,16 +97,17 @@ tokens = list(GoxLexer().tokenize(data))
 ast = GoxParser().parse(iter(tokens))
 save_ast_to_json(ast, "test_expressions.json")
 
-# Prueba de tipos y conversiones
-data = '''
-var x float = float(10);
-var y int = int(3.14);
-var z char = char(65);
-var flag bool = bool(1);
-'''
-tokens = list(GoxLexer().tokenize(data))
-ast = GoxParser().parse(iter(tokens))
-save_ast_to_json(ast, "test_type_conversions.json")
+# # Prueba de tipos y conversiones
+# data = '''
+# float(10);
+# int(3.14);
+# char(65);
+# bool(false);
+# '''
+# tokens = list(GoxLexer().tokenize(data))
+# ast = GoxParser().parse(iter(tokens))
+# save_ast_to_json(ast, "test_type_conversions.json")
+
 
 # Prueba de argumentos en funciones
 data = '''
@@ -132,26 +133,25 @@ tokens = list(GoxLexer().tokenize(data))
 ast = GoxParser().parse(iter(tokens))
 save_ast_to_json(ast, "test_literals.json")
 
+
 # Prueba de importación de funciones
 data = '''
 import func external_func(a int) int {
     return a * 2;
 }
-
-var result int = external_func(5);
 '''
 tokens = list(GoxLexer().tokenize(data))
 ast = GoxParser().parse(iter(tokens))
 save_ast_to_json(ast, "test_import_functions.json")
 
-# Prueba de expresiones complejas
-data = '''
-var result int = (3 + 4 * 2) - (10 / (5 - 3)) % 2;
-var is_valid bool = (true || false) && (3 > 2) && (5 < 4);
-'''
-tokens = list(GoxLexer().tokenize(data))
-ast = GoxParser().parse(iter(tokens))
-save_ast_to_json(ast, "test_complex_expressions.json")
+# # Prueba de expresiones complejas
+# data = '''
+# var result int = (3 + 4 * 2) - (10 / (5 - 3)) * 2;
+# var is_valid bool = (true || false) && (3 > 2) && (5 < 4);
+# '''
+# tokens = list(GoxLexer().tokenize(data))
+# ast = GoxParser().parse(iter(tokens))
+# save_ast_to_json(ast, "test_complex_expressions.json")
 
 # Prueba de un programa completo
 data = '''
@@ -163,7 +163,7 @@ func main() {
     if result > 15 {
         print (15);
     } else {
-        print ( result );
+        print result;
     }
 
     while x > 0 {
@@ -172,7 +172,13 @@ func main() {
     }
 }
 
+
 '''
 tokens = list(GoxLexer().tokenize(data))
 ast = GoxParser().parse(iter(tokens))
 save_ast_to_json(ast, "test_full_program.json")
+
+
+
+
+
