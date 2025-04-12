@@ -1,0 +1,1011 @@
+[
+    {
+        "_type": "FunctionDefinition",
+        "type": "FunctionDefinition",
+        "value": null,
+        "children": [
+            {
+                "_type": "Node",
+                "type": "Name",
+                "value": "mod",
+                "children": []
+            },
+            {
+                "_type": "Node",
+                "type": "ReturnType",
+                "value": "int",
+                "children": []
+            },
+            {
+                "_type": "Node",
+                "type": "Parameters",
+                "value": null,
+                "children": [
+                    {
+                        "_type": "Node",
+                        "type": "Parameter",
+                        "value": {
+                            "_type": "Parameter",
+                            "type": "int",
+                            "value": null,
+                            "children": [],
+                            "name": "x"
+                        },
+                        "children": []
+                    },
+                    {
+                        "_type": "Node",
+                        "type": "Parameter",
+                        "value": {
+                            "_type": "Parameter",
+                            "type": "int",
+                            "value": null,
+                            "children": [],
+                            "name": "y"
+                        },
+                        "children": []
+                    }
+                ]
+            },
+            {
+                "_type": "Node",
+                "type": "Body",
+                "value": null,
+                "children": [
+                    {
+                        "_type": "Return",
+                        "type": "Return",
+                        "value": null,
+                        "children": [
+                            {
+                                "_type": "Node",
+                                "type": "Expression",
+                                "value": {
+                                    "_type": "BinaryOperation",
+                                    "type": "BinaryOperation",
+                                    "value": null,
+                                    "children": [],
+                                    "left": {
+                                        "_type": "PrimitiveReadLocation",
+                                        "type": "PrimitiveReadLocation",
+                                        "value": null,
+                                        "children": [],
+                                        "name": "x"
+                                    },
+                                    "operator": "MINUS",
+                                    "right": {
+                                        "_type": "BinaryOperation",
+                                        "type": "BinaryOperation",
+                                        "value": null,
+                                        "children": [],
+                                        "left": {
+                                            "_type": "BinaryOperation",
+                                            "type": "BinaryOperation",
+                                            "value": null,
+                                            "children": [],
+                                            "left": {
+                                                "_type": "PrimitiveReadLocation",
+                                                "type": "PrimitiveReadLocation",
+                                                "value": null,
+                                                "children": [],
+                                                "name": "x"
+                                            },
+                                            "operator": "DIVIDE",
+                                            "right": {
+                                                "_type": "PrimitiveReadLocation",
+                                                "type": "PrimitiveReadLocation",
+                                                "value": null,
+                                                "children": [],
+                                                "name": "y"
+                                            }
+                                        },
+                                        "operator": "TIMES",
+                                        "right": {
+                                            "_type": "PrimitiveReadLocation",
+                                            "type": "PrimitiveReadLocation",
+                                            "value": null,
+                                            "children": [],
+                                            "name": "y"
+                                        }
+                                    }
+                                },
+                                "children": []
+                            }
+                        ],
+                        "expression": {
+                            "_type": "Node",
+                            "type": "Expression",
+                            "value": {
+                                "_type": "BinaryOperation",
+                                "type": "BinaryOperation",
+                                "value": null,
+                                "children": [],
+                                "left": {
+                                    "_type": "PrimitiveReadLocation",
+                                    "type": "PrimitiveReadLocation",
+                                    "value": null,
+                                    "children": [],
+                                    "name": "x"
+                                },
+                                "operator": "MINUS",
+                                "right": {
+                                    "_type": "BinaryOperation",
+                                    "type": "BinaryOperation",
+                                    "value": null,
+                                    "children": [],
+                                    "left": {
+                                        "_type": "BinaryOperation",
+                                        "type": "BinaryOperation",
+                                        "value": null,
+                                        "children": [],
+                                        "left": {
+                                            "_type": "PrimitiveReadLocation",
+                                            "type": "PrimitiveReadLocation",
+                                            "value": null,
+                                            "children": [],
+                                            "name": "x"
+                                        },
+                                        "operator": "DIVIDE",
+                                        "right": {
+                                            "_type": "PrimitiveReadLocation",
+                                            "type": "PrimitiveReadLocation",
+                                            "value": null,
+                                            "children": [],
+                                            "name": "y"
+                                        }
+                                    },
+                                    "operator": "TIMES",
+                                    "right": {
+                                        "_type": "PrimitiveReadLocation",
+                                        "type": "PrimitiveReadLocation",
+                                        "value": null,
+                                        "children": [],
+                                        "name": "y"
+                                    }
+                                }
+                            },
+                            "children": []
+                        }
+                    }
+                ]
+            }
+        ],
+        "name": "mod",
+        "parameters": [
+            {
+                "_type": "Parameter",
+                "type": "int",
+                "value": null,
+                "children": [],
+                "name": "x"
+            },
+            {
+                "_type": "Parameter",
+                "type": "int",
+                "value": null,
+                "children": [],
+                "name": "y"
+            }
+        ],
+        "return_type": "int",
+        "body": [
+            {
+                "_type": "Return",
+                "type": "Return",
+                "value": null,
+                "children": [
+                    {
+                        "_type": "Node",
+                        "type": "Expression",
+                        "value": {
+                            "_type": "BinaryOperation",
+                            "type": "BinaryOperation",
+                            "value": null,
+                            "children": [],
+                            "left": {
+                                "_type": "PrimitiveReadLocation",
+                                "type": "PrimitiveReadLocation",
+                                "value": null,
+                                "children": [],
+                                "name": "x"
+                            },
+                            "operator": "MINUS",
+                            "right": {
+                                "_type": "BinaryOperation",
+                                "type": "BinaryOperation",
+                                "value": null,
+                                "children": [],
+                                "left": {
+                                    "_type": "BinaryOperation",
+                                    "type": "BinaryOperation",
+                                    "value": null,
+                                    "children": [],
+                                    "left": {
+                                        "_type": "PrimitiveReadLocation",
+                                        "type": "PrimitiveReadLocation",
+                                        "value": null,
+                                        "children": [],
+                                        "name": "x"
+                                    },
+                                    "operator": "DIVIDE",
+                                    "right": {
+                                        "_type": "PrimitiveReadLocation",
+                                        "type": "PrimitiveReadLocation",
+                                        "value": null,
+                                        "children": [],
+                                        "name": "y"
+                                    }
+                                },
+                                "operator": "TIMES",
+                                "right": {
+                                    "_type": "PrimitiveReadLocation",
+                                    "type": "PrimitiveReadLocation",
+                                    "value": null,
+                                    "children": [],
+                                    "name": "y"
+                                }
+                            }
+                        },
+                        "children": []
+                    }
+                ],
+                "expression": {
+                    "_type": "Node",
+                    "type": "Expression",
+                    "value": {
+                        "_type": "BinaryOperation",
+                        "type": "BinaryOperation",
+                        "value": null,
+                        "children": [],
+                        "left": {
+                            "_type": "PrimitiveReadLocation",
+                            "type": "PrimitiveReadLocation",
+                            "value": null,
+                            "children": [],
+                            "name": "x"
+                        },
+                        "operator": "MINUS",
+                        "right": {
+                            "_type": "BinaryOperation",
+                            "type": "BinaryOperation",
+                            "value": null,
+                            "children": [],
+                            "left": {
+                                "_type": "BinaryOperation",
+                                "type": "BinaryOperation",
+                                "value": null,
+                                "children": [],
+                                "left": {
+                                    "_type": "PrimitiveReadLocation",
+                                    "type": "PrimitiveReadLocation",
+                                    "value": null,
+                                    "children": [],
+                                    "name": "x"
+                                },
+                                "operator": "DIVIDE",
+                                "right": {
+                                    "_type": "PrimitiveReadLocation",
+                                    "type": "PrimitiveReadLocation",
+                                    "value": null,
+                                    "children": [],
+                                    "name": "y"
+                                }
+                            },
+                            "operator": "TIMES",
+                            "right": {
+                                "_type": "PrimitiveReadLocation",
+                                "type": "PrimitiveReadLocation",
+                                "value": null,
+                                "children": [],
+                                "name": "y"
+                            }
+                        }
+                    },
+                    "children": []
+                }
+            }
+        ]
+    },
+    {
+        "_type": "FunctionDefinition",
+        "type": "FunctionDefinition",
+        "value": null,
+        "children": [
+            {
+                "_type": "Node",
+                "type": "Name",
+                "value": "isprime",
+                "children": []
+            },
+            {
+                "_type": "Node",
+                "type": "ReturnType",
+                "value": "bool",
+                "children": []
+            },
+            {
+                "_type": "Node",
+                "type": "Parameters",
+                "value": null,
+                "children": [
+                    {
+                        "_type": "Node",
+                        "type": "Parameter",
+                        "value": {
+                            "_type": "Parameter",
+                            "type": "int",
+                            "value": null,
+                            "children": [],
+                            "name": "n"
+                        },
+                        "children": []
+                    }
+                ]
+            },
+            {
+                "_type": "Node",
+                "type": "Body",
+                "value": null,
+                "children": [
+                    {
+                        "_type": "Conditional",
+                        "type": "Conditional",
+                        "value": null,
+                        "children": [
+                            {
+                                "_type": "Node",
+                                "type": "Condition",
+                                "value": {
+                                    "_type": "BinaryOperation",
+                                    "type": "BinaryOperation",
+                                    "value": null,
+                                    "children": [],
+                                    "left": {
+                                        "_type": "PrimitiveReadLocation",
+                                        "type": "PrimitiveReadLocation",
+                                        "value": null,
+                                        "children": [],
+                                        "name": "n"
+                                    },
+                                    "operator": "LT",
+                                    "right": {
+                                        "_type": "Literal",
+                                        "type": "2",
+                                        "value": "int",
+                                        "children": []
+                                    }
+                                },
+                                "children": []
+                            },
+                            {
+                                "_type": "Node",
+                                "type": "True",
+                                "value": [
+                                    {
+                                        "_type": "Return",
+                                        "type": "Return",
+                                        "value": null,
+                                        "children": [
+                                            {
+                                                "_type": "Node",
+                                                "type": "Expression",
+                                                "value": {
+                                                    "_type": "Literal",
+                                                    "type": "false",
+                                                    "value": "bool",
+                                                    "children": []
+                                                },
+                                                "children": []
+                                            }
+                                        ],
+                                        "expression": {
+                                            "_type": "Node",
+                                            "type": "Expression",
+                                            "value": {
+                                                "_type": "Literal",
+                                                "type": "false",
+                                                "value": "bool",
+                                                "children": []
+                                            },
+                                            "children": []
+                                        }
+                                    }
+                                ],
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "_type": "VariableDeclaration",
+                        "type": "VariableDeclaration",
+                        "value": {
+                            "_type": "Literal",
+                            "type": "2",
+                            "value": "int",
+                            "children": []
+                        },
+                        "children": [
+                            {
+                                "_type": "Node",
+                                "type": "Name",
+                                "value": "i",
+                                "children": []
+                            },
+                            {
+                                "_type": "Node",
+                                "type": "Type",
+                                "value": "int",
+                                "children": []
+                            },
+                            {
+                                "_type": "Node",
+                                "type": "Value",
+                                "value": {
+                                    "_type": "Literal",
+                                    "type": "2",
+                                    "value": "int",
+                                    "children": []
+                                },
+                                "children": []
+                            }
+                        ],
+                        "name": "i",
+                        "var_type": "int",
+                        "is_constant": false
+                    },
+                    {
+                        "_type": "WhileLoop",
+                        "type": "While",
+                        "value": null,
+                        "children": [],
+                        "condition": {
+                            "_type": "BinaryOperation",
+                            "type": "BinaryOperation",
+                            "value": null,
+                            "children": [],
+                            "left": {
+                                "_type": "BinaryOperation",
+                                "type": "BinaryOperation",
+                                "value": null,
+                                "children": [],
+                                "left": {
+                                    "_type": "PrimitiveReadLocation",
+                                    "type": "PrimitiveReadLocation",
+                                    "value": null,
+                                    "children": [],
+                                    "name": "i"
+                                },
+                                "operator": "TIMES",
+                                "right": {
+                                    "_type": "PrimitiveReadLocation",
+                                    "type": "PrimitiveReadLocation",
+                                    "value": null,
+                                    "children": [],
+                                    "name": "i"
+                                }
+                            },
+                            "operator": "LE",
+                            "right": {
+                                "_type": "PrimitiveReadLocation",
+                                "type": "PrimitiveReadLocation",
+                                "value": null,
+                                "children": [],
+                                "name": "n"
+                            }
+                        },
+                        "body": [
+                            {
+                                "_type": "Conditional",
+                                "type": "Conditional",
+                                "value": null,
+                                "children": [
+                                    {
+                                        "_type": "Node",
+                                        "type": "Condition",
+                                        "value": {
+                                            "_type": "BinaryOperation",
+                                            "type": "BinaryOperation",
+                                            "value": null,
+                                            "children": [],
+                                            "left": {
+                                                "_type": "FunctionCall",
+                                                "type": "FunctionCall",
+                                                "value": null,
+                                                "children": [],
+                                                "name": "mod",
+                                                "arguments": [
+                                                    {
+                                                        "_type": "PrimitiveReadLocation",
+                                                        "type": "PrimitiveReadLocation",
+                                                        "value": null,
+                                                        "children": [],
+                                                        "name": "n"
+                                                    },
+                                                    {
+                                                        "_type": "PrimitiveReadLocation",
+                                                        "type": "PrimitiveReadLocation",
+                                                        "value": null,
+                                                        "children": [],
+                                                        "name": "i"
+                                                    }
+                                                ]
+                                            },
+                                            "operator": "EQ",
+                                            "right": {
+                                                "_type": "Literal",
+                                                "type": "0",
+                                                "value": "int",
+                                                "children": []
+                                            }
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "_type": "Node",
+                                        "type": "True",
+                                        "value": [
+                                            {
+                                                "_type": "Return",
+                                                "type": "Return",
+                                                "value": null,
+                                                "children": [
+                                                    {
+                                                        "_type": "Node",
+                                                        "type": "Expression",
+                                                        "value": {
+                                                            "_type": "Literal",
+                                                            "type": "false",
+                                                            "value": "bool",
+                                                            "children": []
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ],
+                                                "expression": {
+                                                    "_type": "Node",
+                                                    "type": "Expression",
+                                                    "value": {
+                                                        "_type": "Literal",
+                                                        "type": "false",
+                                                        "value": "bool",
+                                                        "children": []
+                                                    },
+                                                    "children": []
+                                                }
+                                            }
+                                        ],
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "_type": "PrimitiveAssignmentLocation",
+                                "type": "PrimitiveAssignmentLocation",
+                                "value": null,
+                                "children": [],
+                                "name": "i",
+                                "expression": {
+                                    "_type": "BinaryOperation",
+                                    "type": "BinaryOperation",
+                                    "value": null,
+                                    "children": [],
+                                    "left": {
+                                        "_type": "PrimitiveReadLocation",
+                                        "type": "PrimitiveReadLocation",
+                                        "value": null,
+                                        "children": [],
+                                        "name": "i"
+                                    },
+                                    "operator": "PLUS",
+                                    "right": {
+                                        "_type": "Literal",
+                                        "type": "1",
+                                        "value": "int",
+                                        "children": []
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "_type": "Return",
+                        "type": "Return",
+                        "value": null,
+                        "children": [
+                            {
+                                "_type": "Node",
+                                "type": "Expression",
+                                "value": {
+                                    "_type": "Literal",
+                                    "type": "true",
+                                    "value": "bool",
+                                    "children": []
+                                },
+                                "children": []
+                            }
+                        ],
+                        "expression": {
+                            "_type": "Node",
+                            "type": "Expression",
+                            "value": {
+                                "_type": "Literal",
+                                "type": "true",
+                                "value": "bool",
+                                "children": []
+                            },
+                            "children": []
+                        }
+                    }
+                ]
+            }
+        ],
+        "name": "isprime",
+        "parameters": [
+            {
+                "_type": "Parameter",
+                "type": "int",
+                "value": null,
+                "children": [],
+                "name": "n"
+            }
+        ],
+        "return_type": "bool",
+        "body": [
+            {
+                "_type": "Conditional",
+                "type": "Conditional",
+                "value": null,
+                "children": [
+                    {
+                        "_type": "Node",
+                        "type": "Condition",
+                        "value": {
+                            "_type": "BinaryOperation",
+                            "type": "BinaryOperation",
+                            "value": null,
+                            "children": [],
+                            "left": {
+                                "_type": "PrimitiveReadLocation",
+                                "type": "PrimitiveReadLocation",
+                                "value": null,
+                                "children": [],
+                                "name": "n"
+                            },
+                            "operator": "LT",
+                            "right": {
+                                "_type": "Literal",
+                                "type": "2",
+                                "value": "int",
+                                "children": []
+                            }
+                        },
+                        "children": []
+                    },
+                    {
+                        "_type": "Node",
+                        "type": "True",
+                        "value": [
+                            {
+                                "_type": "Return",
+                                "type": "Return",
+                                "value": null,
+                                "children": [
+                                    {
+                                        "_type": "Node",
+                                        "type": "Expression",
+                                        "value": {
+                                            "_type": "Literal",
+                                            "type": "false",
+                                            "value": "bool",
+                                            "children": []
+                                        },
+                                        "children": []
+                                    }
+                                ],
+                                "expression": {
+                                    "_type": "Node",
+                                    "type": "Expression",
+                                    "value": {
+                                        "_type": "Literal",
+                                        "type": "false",
+                                        "value": "bool",
+                                        "children": []
+                                    },
+                                    "children": []
+                                }
+                            }
+                        ],
+                        "children": []
+                    }
+                ]
+            },
+            {
+                "_type": "VariableDeclaration",
+                "type": "VariableDeclaration",
+                "value": {
+                    "_type": "Literal",
+                    "type": "2",
+                    "value": "int",
+                    "children": []
+                },
+                "children": [
+                    {
+                        "_type": "Node",
+                        "type": "Name",
+                        "value": "i",
+                        "children": []
+                    },
+                    {
+                        "_type": "Node",
+                        "type": "Type",
+                        "value": "int",
+                        "children": []
+                    },
+                    {
+                        "_type": "Node",
+                        "type": "Value",
+                        "value": {
+                            "_type": "Literal",
+                            "type": "2",
+                            "value": "int",
+                            "children": []
+                        },
+                        "children": []
+                    }
+                ],
+                "name": "i",
+                "var_type": "int",
+                "is_constant": false
+            },
+            {
+                "_type": "WhileLoop",
+                "type": "While",
+                "value": null,
+                "children": [],
+                "condition": {
+                    "_type": "BinaryOperation",
+                    "type": "BinaryOperation",
+                    "value": null,
+                    "children": [],
+                    "left": {
+                        "_type": "BinaryOperation",
+                        "type": "BinaryOperation",
+                        "value": null,
+                        "children": [],
+                        "left": {
+                            "_type": "PrimitiveReadLocation",
+                            "type": "PrimitiveReadLocation",
+                            "value": null,
+                            "children": [],
+                            "name": "i"
+                        },
+                        "operator": "TIMES",
+                        "right": {
+                            "_type": "PrimitiveReadLocation",
+                            "type": "PrimitiveReadLocation",
+                            "value": null,
+                            "children": [],
+                            "name": "i"
+                        }
+                    },
+                    "operator": "LE",
+                    "right": {
+                        "_type": "PrimitiveReadLocation",
+                        "type": "PrimitiveReadLocation",
+                        "value": null,
+                        "children": [],
+                        "name": "n"
+                    }
+                },
+                "body": [
+                    {
+                        "_type": "Conditional",
+                        "type": "Conditional",
+                        "value": null,
+                        "children": [
+                            {
+                                "_type": "Node",
+                                "type": "Condition",
+                                "value": {
+                                    "_type": "BinaryOperation",
+                                    "type": "BinaryOperation",
+                                    "value": null,
+                                    "children": [],
+                                    "left": {
+                                        "_type": "FunctionCall",
+                                        "type": "FunctionCall",
+                                        "value": null,
+                                        "children": [],
+                                        "name": "mod",
+                                        "arguments": [
+                                            {
+                                                "_type": "PrimitiveReadLocation",
+                                                "type": "PrimitiveReadLocation",
+                                                "value": null,
+                                                "children": [],
+                                                "name": "n"
+                                            },
+                                            {
+                                                "_type": "PrimitiveReadLocation",
+                                                "type": "PrimitiveReadLocation",
+                                                "value": null,
+                                                "children": [],
+                                                "name": "i"
+                                            }
+                                        ]
+                                    },
+                                    "operator": "EQ",
+                                    "right": {
+                                        "_type": "Literal",
+                                        "type": "0",
+                                        "value": "int",
+                                        "children": []
+                                    }
+                                },
+                                "children": []
+                            },
+                            {
+                                "_type": "Node",
+                                "type": "True",
+                                "value": [
+                                    {
+                                        "_type": "Return",
+                                        "type": "Return",
+                                        "value": null,
+                                        "children": [
+                                            {
+                                                "_type": "Node",
+                                                "type": "Expression",
+                                                "value": {
+                                                    "_type": "Literal",
+                                                    "type": "false",
+                                                    "value": "bool",
+                                                    "children": []
+                                                },
+                                                "children": []
+                                            }
+                                        ],
+                                        "expression": {
+                                            "_type": "Node",
+                                            "type": "Expression",
+                                            "value": {
+                                                "_type": "Literal",
+                                                "type": "false",
+                                                "value": "bool",
+                                                "children": []
+                                            },
+                                            "children": []
+                                        }
+                                    }
+                                ],
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "_type": "PrimitiveAssignmentLocation",
+                        "type": "PrimitiveAssignmentLocation",
+                        "value": null,
+                        "children": [],
+                        "name": "i",
+                        "expression": {
+                            "_type": "BinaryOperation",
+                            "type": "BinaryOperation",
+                            "value": null,
+                            "children": [],
+                            "left": {
+                                "_type": "PrimitiveReadLocation",
+                                "type": "PrimitiveReadLocation",
+                                "value": null,
+                                "children": [],
+                                "name": "i"
+                            },
+                            "operator": "PLUS",
+                            "right": {
+                                "_type": "Literal",
+                                "type": "1",
+                                "value": "int",
+                                "children": []
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "_type": "Return",
+                "type": "Return",
+                "value": null,
+                "children": [
+                    {
+                        "_type": "Node",
+                        "type": "Expression",
+                        "value": {
+                            "_type": "Literal",
+                            "type": "true",
+                            "value": "bool",
+                            "children": []
+                        },
+                        "children": []
+                    }
+                ],
+                "expression": {
+                    "_type": "Node",
+                    "type": "Expression",
+                    "value": {
+                        "_type": "Literal",
+                        "type": "true",
+                        "value": "bool",
+                        "children": []
+                    },
+                    "children": []
+                }
+            }
+        ]
+    },
+    {
+        "_type": "VariableDeclaration",
+        "type": "VariableDeclaration",
+        "value": {
+            "_type": "Literal",
+            "type": "21",
+            "value": "int",
+            "children": []
+        },
+        "children": [
+            {
+                "_type": "Node",
+                "type": "Name",
+                "value": "num",
+                "children": []
+            },
+            {
+                "_type": "Node",
+                "type": "Type",
+                "value": "int",
+                "children": []
+            },
+            {
+                "_type": "Node",
+                "type": "Value",
+                "value": {
+                    "_type": "Literal",
+                    "type": "21",
+                    "value": "int",
+                    "children": []
+                },
+                "children": []
+            }
+        ],
+        "name": "num",
+        "var_type": "int",
+        "is_constant": false
+    },
+    {
+        "_type": "Print",
+        "type": "Print",
+        "value": null,
+        "children": [
+            {
+                "_type": "Node",
+                "type": "Expression",
+                "value": {
+                    "_type": "FunctionCall",
+                    "type": "FunctionCall",
+                    "value": null,
+                    "children": [],
+                    "name": "factorize",
+                    "arguments": [
+                        {
+                            "_type": "PrimitiveReadLocation",
+                            "type": "PrimitiveReadLocation",
+                            "value": null,
+                            "children": [],
+                            "name": "num"
+                        }
+                    ]
+                },
+                "children": []
+            }
+        ]
+    }
+]
