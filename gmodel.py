@@ -1,361 +1,309 @@
-#Definicion AST para la gramatica de Gox# program <- statement* EOF
-#
-# statement <- assignment
-#           /  vardecl
-#           /  funcdel
-#           /  if_stmt
-#           /  while_stmt
-#           /  break_stmt
-#           /  continue_stmt
-#           /  return_stmt
-#           /  print_stmt
-#
-# assignment <- location '=' expression ';'
-#
-# vardecl <- ('var'/'const') ID type? ('=' expression)? ';'
-#
-# funcdecl <- 'import'? 'func' ID '(' parameters ')' type '{' statement* '}'
-#
-# if_stmt <- 'if' expression '{' statement* '}'
-#         /  'if' expression '{' statement* '}' else '{' statement* '}'
-#
-# while_stmt <- 'while' expression '{' statement* '}'
-#
-# break_stmt <- 'break' ';'
-#
-# continue_stmt <- 'continue' ';'
-#
-# return_stmt <- 'return' expression ';'
-#
-# print_stmt <- 'print' expression ';'
-#
-# parameters <- ID type (',' ID type)*
-#            /  empty
-#
-# type <- 'int' / 'float' / 'char' / 'bool'
-#
-# location <- ID
-#          /  '`' expression
-#
-# expression <- orterm ('||' orterm)*
-#
-# orterm <- andterm ('&&' andterm)*
-#
-# andterm <- relterm (('<' / '>' / '<=' / '>=' / '==' / '!=') reltime)*
-#
-# relterm <- addterm (('+' / '-') addterm)*
-#
-# addterm <- factor (('*' / '/') factor)*
-#
-# factor <- literal
-#        / ('+' / '-' / '^') expression
-#        / '(' expression ')'
-#        / type '(' expression ')'
-#        / ID '(' arguments ')'
-#        / location
-#
-# arguments <- expression (',' expression)*
-#          / empty
-#
-# literal <- INTEGER / FLOAT / CHAR / bool
-#
-# bool <- 'true' / 'false'
-
-# Este archivo define el modelo del Árbol de Sintaxis Abstracta (AST) para el lenguaje Gox.
-# El AST es una representación estructurada de los programas escritos en Gox, basada en
-# la gramática definida al inicio del archivo.
 
 
-from typing import List, Union, Optional
-from dataclasses import dataclass
-
-from typing import List, Optional
-from dataclasses import dataclass
-
-# Clase base para todos los nodos del AST
-@dataclass
 class Node:
-    """
-    Clase base para todos los nodos del AST.
-    Sirve como punto de partida para heredar las demás clases.
-    """
-    pass
+    def __init__(self, type, value=None):
+        self.type = type
+        self.value = value
+        self.children = []
 
-# 1. Program
-@dataclass
-class Program(Node):
-    """
-    Representa un programa completo en Gox.
-    Contiene una lista de sentencias (statements) que forman el cuerpo del programa.
-    """
-    statements: List["Statement"]
+    def add_child(self, node):
+        self.children.append(node)
 
-# Clase base para todas las sentencias
-@dataclass
-class Statement(Node):
-    """
-    Clase base para todas las sentencias en Gox.
-    Las sentencias incluyen asignaciones, declaraciones, control de flujo, etc.
-    """
-    pass
+    def __repr__(self):
+        return f"Node({self.type}, {self.value}, children={self.children})"
 
-# Clase base para todas las expresiones
-@dataclass
-class Expression(Node):
-    """
-    Clase base para todas las expresiones en Gox.
-    Las expresiones producen valores y pueden incluir operaciones aritméticas, lógicas, etc.
-    """
-    pass
+
+
+
+
+class Assignment:
+    def __init__(self, location, expression):
+        self.location = location  # Identificador de la variable
+        self.expression = expression # Expresión a asignar
+
+    def __repr__(self): #Devuelve una representación en texto del objeto para que podamos imprimirlo y ver su contenido fácilmente.
+
+        return f'Assignment({self.location}, {self.expression})'
+
+
+
+
+class Print(Node):
+    def __init__(self, expression):
+        super().__init__("Print")
+        self.add_child(Node("Expression", expression))  # Agregamos la expresión como nodo hijo
     
-
-    
-# Clase base para declaraciones
-@dataclass
-class Declaration(Statement):
-    """
-    Clase base para todas las declaraciones en Gox.
-    Incluye declaraciones de variables y funciones.
-    """
-    pass
-    
-
-# Clase base para ubicaciones
-@dataclass
-class Location(Node):
-    """
-    Clase base para ubicaciones en Gox.
-    Una ubicación representa un lugar donde se almacena un valor, como una variable o una dirección de memoria.
-    """
-    pass
-
-# Parte 1. Statements
-#
-# Los programas en goxlang consisten en sentencias. Estas incluyen
-# operaciones como asignación, I/O (imprimir), control de flujo, entre otras.
-#
+    def __repr__(self):
+        return f'Print({self.children[0].value})'  # Tomamos el valor del primer hijo
 
 
-@dataclass
-class Assignment(Statement):
-    """
-    Representa una asignación en Gox.
-    location = expression;
-    """
-    location: Location
-    expression: Expression
-
-@dataclass
-class Print(Statement):
-    """
-    Representa una sentencia de impresión en Gox.
-    print expression;
-    """
-    expression: Expression
-
-@dataclass
-class If(Statement):
-    """
-    Representa una sentencia condicional (if) en Gox.
-    if test { consequence } [else { alternative }]
-    """
-    test: Expression
-    consequence: List[Statement]
-    alternative: Optional[List[Statement]] = None
-
-@dataclass
-class While(Statement):
-    """
-    Representa un bucle while en Gox.
-    while test { body }
-    """
-    test: Expression
-    body: List[Statement]
-
-@dataclass
-class Break(Statement):
-    """
-    Representa una sentencia break en Gox.
-    break;
-    """
-    pass
-
-@dataclass
-class Continue(Statement):
-    """
-    Representa una sentencia continue en Gox.
-    continue;
-    """
-    pass
-
-@dataclass
-class Return(Statement):
-    """
-    Representa una sentencia return en Gox.
-    return expression;
-    """
-    expression: Expression
-
-# Parte 2. Definictions/Declarations
-#
-# goxlang requiere que todas las variables y funciones se declaren antes de 
-# ser utilizadas.  Todas las definiciones tienen un nombre que las identifica.
-# Estos nombres se definen dentro de un entorno que forma lo que se denomina
-# un "ámbito".  Por ejemplo, ámbito global o ámbito local.
 
 
-@dataclass
-class VarDeclaration(Declaration):
-    """
-    Representa una declaración de variable en Gox.
-    var/const name: type = value;
-    """
-    name: str
-    type: str
-    value: Optional[Expression] = None
-    is_const: bool = False
+class Conditional(Node):
+    def __init__(self, condition, true_branch, false_branch=None):
+        super().__init__("Conditional")  # Tipo de nodo: "Conditional"
+        self.add_child(Node("Condition", condition))  # Nodo hijo que representa la condición
+        self.add_child(Node("True", true_branch))  # Nodo hijo para la rama verdadera
+        if false_branch:
+            self.add_child(Node("False", false_branch))  # Nodo hijo para la rama falsa (opcional)
 
-@dataclass
+    def __repr__(self):
+        if len(self.children) == 3:
+            return f'Conditional(If {self.children[0].value}, Then {self.children[1].value}, Else {self.children[2].value})'
+        else:
+            return f'Conditional(If {self.children[0].value}, Then {self.children[1].value})'
+
+
+
+class WhileLoop(Node):
+    def __init__(self, condition, body):
+        super().__init__("While")  # Llama al constructor de Node con el tipo "While"
+        self.condition = condition  # Expresión que se evalúa en cada iteración
+        self.body = body  # Bloque de código que se ejecuta dentro del while
+
+    def __repr__(self):
+        return f'While({self.condition}, {self.body})'
+
+
+
+class Break(Node):
+    def __init__(self):
+        super().__init__("Break")
+
+    def __repr__(self):
+        return "Break()"
+
+
+class Continue(Node):
+    def __init__(self):
+        super().__init__("Continue")
+
+    def __repr__(self):
+        return "Continue()"
+
+
+class Return(Node):
+    def __init__(self, expression):
+        super().__init__("Return")
+        self.expression = Node("Expression", expression)  # Crear nodo hijo para la expresión
+        self.add_child(self.expression)  # Agregarlo al árbol
+
+    def __repr__(self):
+        return f'Return({self.expression.value})'
+
+
+
+
+
+
+class VariableDeclaration(Node):
+    def __init__(self, name, var_type=None, value=None, is_constant=False):
+        super().__init__("VariableDeclaration")
+        self.name = name  # Nombre de la variable
+        self.var_type = var_type  # Tipo de la variable (opcional si se infiere)
+        self.value = value  # Valor de la variable (opcional)
+        self.is_constant = is_constant  # Si es `const` o `var`
+
+        # Agregar nodos hijos si existen
+        self.add_child(Node("Name", name))
+        if var_type:
+            self.add_child(Node("Type", var_type))
+        if value:
+            self.add_child(Node("Value", value))
+
+    def __repr__(self):
+        return f'VariableDeclaration(name={self.name}, type={self.var_type}, value={self.value}, constant={self.is_constant})'
+
+
+
+class FunctionDefinition(Node):
+    def __init__(self, name, parameters, return_type, body):
+        super().__init__("FunctionDefinition")
+        self.name = name
+        self.parameters = parameters  # Lista de parámetros (nombre, tipo)
+        self.return_type = return_type
+        self.body = body  # Lista de sentencias en el cuerpo de la función
+        
+        self.add_child(Node("Name", name))
+        self.add_child(Node("ReturnType", return_type))
+        
+        param_node = Node("Parameters")
+        for param in parameters:
+            param_node.add_child(Node("Parameter", param))
+        self.add_child(param_node)
+        
+        body_node = Node("Body")
+        for statement in body:
+            body_node.add_child(statement)
+        self.add_child(body_node)
+
+    def __repr__(self):
+        return f'FunctionDefinition(name={self.name}, parameters={self.parameters}, return_type={self.return_type}, body={self.body})'
+
+
+class FunctionImport(Node):
+    def __init__(self, name, parameters, return_type):
+        super().__init__("FunctionImport")
+        self.name = name
+        self.parameters = parameters
+        self.return_type = return_type
+        
+        self.add_child(Node("Name", name))
+        self.add_child(Node("ReturnType", return_type))
+        
+        param_node = Node("Parameters")
+        for param in parameters:
+            param_node.add_child(Node("Parameter", param))
+        self.add_child(param_node)
+
+    def __repr__(self):
+        return f'FunctionImport(name={self.name}, parameters={self.parameters}, return_type={self.return_type})'
+
+
 class Parameter(Node):
-    """
-    Representa un parámetro de una función en Gox.
-    name: type
-    """
-    name: str
-    type: str
+    def __init__(self, name, type):
+        super().__init__("Parameter")
+        self.name = name
+        self.type = type
 
-@dataclass
-class FunctionDef(Declaration):
-    """
-    Representa una definición de función en Gox.
-    func name(parameters) -> return_type { body }
-    """
-    name: str
-    parameters: List[Parameter]
-    return_type: str
-    body: List[Statement]
-
-@dataclass
-class ImportFunction(Declaration):
-    """
-    Representa una función importada en Gox.
-    import func name(parameters) -> return_type;
-    """
-    name: str
-    parameters: List[Parameter]
-    return_type: str
-    body: List[Statement]
-
-# Parte 3. Expressions
-# Las expresiones representan elementos que se evalúan y producen un valor concreto.
-# Incluyen literales, operaciones binarias, unarias, conversiones de tipo, etc.
-
-@dataclass
-class LiteralInteger(Expression):
-    """
-    Representa un literal entero en Gox.
-    """
-    value: int
-
-@dataclass
-class LiteralFloat(Expression):
-    """
-    Representa un literal flotante en Gox.
-    """
-    value: float
-
-@dataclass
-class LiteralBool(Expression):
-    """
-    Representa un literal booleano en Gox.
-    true / false
-    """
-    value: bool
-
-@dataclass
-class LiteralChar(Expression):
-    """
-    Representa un literal de carácter en Gox.
-    """
-    value: str
-
-@dataclass
-class BinaryOp(Expression):
-    """
-    Representa una operación binaria en Gox.
-    left operator right
-    """
-    operator: str
-    left: Expression
-    right: Expression
-
-@dataclass
-class UnaryOp(Expression):
-    """
-    Representa una operación unaria en Gox.
-    operator operand
-    """
-    operator: str
-    operand: Expression
-
-@dataclass
-class TypeConversion(Expression):
-    """
-    Representa una conversión de tipo en Gox.
-    type(expression)
-    """
-    type: str
-    expression: Expression
-
-@dataclass
-class FunctionCall(Expression):
-    """
-    Representa una llamada a función en Gox.
-    name(arguments)
-    """
-    name: str
-    arguments: List[Expression]
-
-# Parte 4: Locations
-#
-# Una ubicación representa un lugar donde se almacena un valor. Lo complicado
-# de las ubicaciones es que se usan de dos maneras diferentes.
-# Primero, una ubicación podría aparecer en el lado izquierdo de una asignación
-# de esta manera:
-#
-#     location = expression;        // Almacena un valor dentro de location
-#
-# Sin embargo, una ubicación podria aparecer como parte de una expresión:
-#
-#     print location + 10;          // Lee un valor desde location
-#
-# Una ubicación no es necesariamente simple nombre de variable. Por ejemplo,
-# considere el siguiente ejemplo en Python:
-#
-#     >>> a = [1,2,3,4] 
-#     >>> a[2] = 10                 // Almacena en ubicación "a[2]"
-#     >>> print(a[2])               // Lee desde ubicación "a[2]" 
-#
+    def __repr__(self):
+        return f'Parameter({self.name}, {self.type})'
 
 
-@dataclass
-class VarLocation(Location):
-    """
-    Representa una ubicación de variable en Gox.
-    """
-    name: str
 
-@dataclass
-class MemoryAddress(Location):
-    """
-    Representa una dirección de memoria en Gox.
-    `expression
-    """
-    address: Expression
+class Literal(Node):
+    def __init__(self, type, value):
+        super().__init__("Literal")
+        self.type = type  # Tipo de dato (int, float, bool, char)
+        self.value = value  # Valor del literal
 
-@dataclass
-class LocationExpr(Expression):
+    def __repr__(self):
+        return f'Literal({self.type}, {self.value})'
+
+
+
+class BinaryOperation(Node):
+    def __init__(self, left, operator, right):
+        super().__init__("BinaryOperation")
+        self.left = left  # Operando izquierdo
+        self.operator = operator  # Operador (+, -, *, /, <, >, etc.)
+        self.right = right  # Operando derecho
+
+    def __repr__(self):
+        return f'BinaryOperation({self.left}, "{self.operator}", {self.right})'
+
+
+
+
+class UnaryOperation(Node):
+    def __init__(self, operator, operand):
+        super().__init__("UnaryOperation")
+        self.operator = operator  # Operador unario (+, -, !, ^)
+        self.operand = operand  # Expresión afectada
+
+    def __repr__(self):
+        return f'UnaryOperation("{self.operator}", {self.operand})'
+
+class Location(Node):
+    def __init__(self, name):
+        super().__init__("Location")
+        self.name = name  # Nombre de la variable o estructura
+
+    def __repr__(self):
+        return f'Location({self.name})'
+
+
+class TypeConversion(Node):
+    def __init__(self, target_type, expression):
+        super().__init__("TypeConversion")
+        self.target_type = target_type  # Tipo de conversión (int, float)
+        self.expression = expression  # Expresión a convertir
+
+    def __repr__(self):
+        return f'TypeConversion({self.target_type}, {self.expression})'
+
+
+
+class FunctionCall(Node):
+    def __init__(self, name, arguments):
+        super().__init__("FunctionCall")
+        self.name = name  # Nombre de la función
+        self.arguments = arguments  # Lista de argumentos
+
+    def __repr__(self):
+        return f'FunctionCall({self.name}, {self.arguments})'
+
+
+class PrimitiveAssignmentLocation(Node):
     """
-    Representa una ubicación utilizada como expresión en Gox.
+    Representa una asignación de valor a una variable en goxlang.
+
+    Ejemplo en goxlang:
+        abc = 123;
+
+    Atributos:
+        name (str): Nombre de la variable.
+        expression: Expresión que se asigna a la variable.
     """
-    location: Location
+    def __init__(self, name, expression):
+        super().__init__("PrimitiveAssignmentLocation")
+        self.name = name
+        self.expression = expression
+    
+    def __repr__(self):
+        return f'PrimitiveAssignmentLocation({self.name}), {self.expression}'
+
+class PrimitiveReadLocation(Node):
+    """
+    Representa la lectura de una variable en goxlang.
+
+    Ejemplo en goxlang:
+        print abc;
+
+    Atributos:
+        name (str): Nombre de la variable que se lee.
+    """
+    def __init__(self, name):
+        super().__init__("PrimitiveReadLocation")
+        self.name = name
+    
+    def __repr__(self):
+        return f'PrimitiveReadLocation({self.name})'
+
+
+class MemoryAssignmentLocation(Node):
+    """
+    Representa una asignación de valor a una dirección de memoria en goxlang.
+
+    Ejemplo en goxlang:
+        `address = 123;
+
+    Atributos:
+        address (int): Dirección de memoria donde se almacena el valor.
+        expression: Expresión que se asigna a la dirección de memoria.
+    """
+    def __init__(self, address, expression):
+        super().__init__("MemoryAssignmentLocation")
+        self.address = address
+        self.expression = expression
+    
+    def __repr__(self):
+        return f'MemoryAssignmentLocation({self.address}), {self.expression}'
+
+
+class MemoryReadLocation(Node):
+    """
+    Representa la lectura de un valor desde una dirección de memoria en goxlang.
+
+    Ejemplo en goxlang:
+        print `address + 10;
+
+    Atributos:
+        address (int): Dirección de memoria que se lee.
+    """
+    def __init__(self, address):
+        super().__init__("MemoryReadLocation")
+        self.address = address
+    
+    def __repr__(self):
+        return f'MemoryReadLocation({self.address})'
