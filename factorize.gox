@@ -16,6 +16,18 @@ func isprime(n int) bool {
     return true;
 }
 
+func factorize(n int) int {
+    var factor int = 2;
+    // print "factores primos de " + n + ": ";
+
+    while n > 1 {
+        while mod(n, factor) == 0 {
+            print factor;
+            n = n / factor;
+        }
+        factor = factor + 1;
+    }
+}
 
 var num int = 21;
 print factorize(num);
