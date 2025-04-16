@@ -3,6 +3,8 @@ from rich.table   import Table
 from rich.console import Console
 from rich         import print
 
+from goxats import Node
+
 class Symtab:
 	'''
 	Una tabla de símbolos.  Este es un objeto simple que sólo
@@ -46,7 +48,22 @@ class Symtab:
 		if self.parent:
 			self.parent.children.append(self)
 		self.children = []
-		
+
+	def __getitem__(self, name):
+		return self.entries[name]
+	
+	def __setitem__(self, name, value):
+		self.entries[name] = value
+	
+
+	def __delitem__(self, name):
+		del self.entries[name]
+
+	def __contains__(self, name):
+		if name in self.entries:
+			return self.entries[name]
+		return False
+
 	def add(self, name, value):
 		'''
 		Agrega un simbol con el valor dado a la tabla de simbolos.

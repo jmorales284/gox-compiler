@@ -2,6 +2,7 @@ from typing import List
 from dataclasses import dataclass
 from glexer import Lexer
 from gmodel import *
+from rich import print_json
 
 import json
 import os
@@ -17,11 +18,11 @@ class Parser:
         self.tokens = tokens
         self.current = 0
 
-    def parse(self) -> List[Node]:
+    def parse(self) -> Program:
         statements = []
         while self.current < len(self.tokens) and self.tokens[self.current].type != "EOF":
             statements.append(self.statement())
-        return statements
+        return Program(statements)
 
     # def statement(self) -> Node:
     #     if self.is_function_call():
@@ -500,6 +501,8 @@ try:
     # 3. Parsear
     parser = Parser(tokens)
     ast = parser.parse()
+    print("AST generado:")
+    print(ast)
     
     # 4. Convertir a JSON 
     def ast_to_dict(node):
