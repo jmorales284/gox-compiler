@@ -17,3 +17,8 @@ func isprime(n int) bool {
     }
     return true;
 }
+
+print isprime(5);
+
+const a int = 5;
+print a;

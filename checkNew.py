@@ -3,7 +3,6 @@ from gmodel import *
 from symtab import Symtab
 from errors import error
 from typesys import check_binop
-import os
 
 class Checker(Visitor):
     @classmethod
@@ -54,7 +53,6 @@ class Checker(Visitor):
 
         # Registrar variable en el entorno actual
         env.add(node.name, node)
-        env.print()
 
     def visit_FunctionDefinition(self, node: FunctionDefinition, env: Symtab):
         '''
