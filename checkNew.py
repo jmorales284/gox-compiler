@@ -124,7 +124,7 @@ class Checker(Visitor):
         '''
         left_type = node.left.accept(self, env)
         right_type = node.right.accept(self, env)
-        result_type = check_binop(left_type, node.operator, right_type)
+        result_type = check_binop(node.operator, left_type, right_type)
         if result_type == 'error':
             error(f"Error en operación binaria: tipos incompatibles '{left_type}' {node.operator} '{right_type}'")
         return result_type
@@ -153,11 +153,15 @@ class Checker(Visitor):
         if len(func.parameters) != len(node.arguments):
             error(f"Error: Número incorrecto de argumentos para función '{node.name}'.")
             return 'error'
-
-        for (arg_expr, (param_name, param_type)) in zip(node.arguments, func.parameters):
-            arg_type = arg_expr.accept(self, env)
-            if arg_type != param_type:
-                error(f"Error: Tipo de argumento incorrecto en llamada a '{node.name}'. Esperado {param_type}, obtenido {arg_type}.")
+        
+        #Visitar argumentos(si están definidos) y verificar que cada argumento sea compatible con cada parámetro de la función
+        node_arguments= node.arguments
+        func_parameters= func.parameters
+        for param, arg in zip(func_parameters,node_arguments):
+            arg_type = arg.accept(self, env)
+            param_type = param.type
+            if param_type != arg_type:
+                error(f"Error: Tipo de argumento '{arg.name}' no coincide con el tipo de parámetro '{param.name}'. Esperado {param_type}, recibido {arg_type}.")
 
         return func.return_type
 
@@ -197,9 +201,13 @@ class Checker(Visitor):
         if symbol.is_constant:
             error(f"Error: La variable '{node.name}' es constante y no se puede modificar.")
             return
-
+        
         expr_type = node.expression.accept(self, env)
-        declared_type = symbol.var_type
+        declared_type = None
+        if isinstance(symbol, Parameter):
+            declared_type = symbol.type
+        elif isinstance(symbol, VariableDeclaration):
+            declared_type = symbol.var_type
 
         if declared_type != expr_type:
             error(f"Error: Tipo incompatible en asignación a '{node.name}'. Esperado {declared_type}, recibido {expr_type}.")
@@ -235,10 +243,12 @@ class Checker(Visitor):
         1. Evalúa que la condición sea booleana.
         2. Verifica el cuerpo del bucle.
         '''
-        cond_type = node.condition.accept(self, env)
-        if cond_type != 'bool':
-            error("Error: La condición del 'while' debe ser booleana.")
-        node.body.accept(self, env)
+        # Verifica la condición
+        node.condition.accept(self, env)
+        # Verifica el cuerpo del bucle
+        stmts = node.body
+        for stmt in stmts:
+            stmt.accept(self, env)
 
     def visit_Break(self, node: Break, env: Symtab):
         '''
