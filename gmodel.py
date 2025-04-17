@@ -278,6 +278,8 @@ class PrimitiveAssignmentLocation(Node):
     
     def __repr__(self):
         return f'PrimitiveAssignmentLocation({self.name}), {self.expression}'
+    
+
 
 class PrimitiveReadLocation(Node):
     """

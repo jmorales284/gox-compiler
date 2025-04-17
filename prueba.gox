@@ -1,0 +1,19 @@
+var z int = 0;
+var y int = 0;
+func mod(x int, y int) int {
+	return z+y;
+}
+
+func isprime(n int) bool {
+    if n < 2 {
+        return false;
+    }
+    // var i int = 2;
+    // while i * i <= n {
+    //     if mod(n, i) == 0 {
+    //         return false;
+    //     }
+    //     i = i + 1;
+    // }
+    return true;
+}

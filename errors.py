@@ -2,6 +2,7 @@
 Manejo de errores del compilador
 
 '''
+import inspect
 
 from rich import print
 

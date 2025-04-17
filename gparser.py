@@ -157,10 +157,12 @@ class Parser:
         var_type = None
         if self.peek() and self.peek().type in {"int", "float", "bool", "char"}:
             var_type = self.advance().value
+
         
         # Manejar asignación (opcional)
         value = None
         if self.match("ASSIGN"):
+
             value = self.expression()
         
         # Consumir el punto y coma final
@@ -283,15 +285,15 @@ class Parser:
             return Literal("false", 'bool')
     
         elif self.match("INTEGER"):
-            return Literal(self.tokens[self.current - 1].value, 'int')
+            return Literal('int',self.tokens[self.current - 1].value)
         
-        elif self.match("FLOAT_LITERAL"):
-            return Literal(self.tokens[self.current - 1].value, 'float')
+        elif self.match("FLOAT"):
+            return Literal('float',self.tokens[self.current - 1].value)
         
         elif self.match("CHAR_LITERAL"):
             char_value = self.tokens[self.current - 1].value
             processed_char = char_value[1:-1].encode().decode('unicode_escape')
-            return Literal(processed_char, 'char')
+            return Literal('char',processed_char)
         
         elif self.match("STRING_LITERAL"):
             string_tokens = []
@@ -299,10 +301,10 @@ class Parser:
                 string_tokens.append(self.advance().value)
             self.consume("STRING_LITERAL", "Se esperaba cierre de comillas")
             string_value = "".join(string_tokens)
-            return Literal(string_value, 'string')
+            return Literal('string',string_value)
         
         elif self.match("BOOLEAN"):
-            return Literal(self.tokens[self.current - 1].value.lower(), 'bool')
+            return Literal('bool',self.tokens[self.current - 1].value.lower())
         
         elif self.match("PLUS") or self.match("MINUS") or self.match("GROW"):
             op = self.tokens[self.current - 1].type
