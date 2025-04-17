@@ -146,7 +146,6 @@ class Parser:
 
     def vardecl(self) -> VariableDeclaration:
         
-        
         is_constant = self.match("const")
         if not is_constant:
             self.consume("var", "Se esperaba 'var' o 'const'")
@@ -176,12 +175,15 @@ class Parser:
                 f"Se esperaba ';' pero se encontró '{current_token.value if current_token else 'EOF'}'"
             ) from e
         
-        return VariableDeclaration(
+        
+        declaration=VariableDeclaration(
             name=name_token.value,
             var_type=var_type,  # Ahora incluye el tipo si fue especificado
             value=value,
             is_constant=is_constant
         )
+
+        return declaration
 
 
 
@@ -485,45 +487,45 @@ class Parser:
 
 
 
-# 1. Cargar código fuente
-SOURCE_FILE = "factorize.gox"  # Nombre del archivo de entrada
-OUTPUT_FILE = "ast_output.json"  # Nombre del archivo de salida
+# # 1. Cargar código fuente
+# SOURCE_FILE = "factorize.gox"  # Nombre del archivo de entrada
+# OUTPUT_FILE = "ast_output.json"  # Nombre del archivo de salida
 
-try:
-    # 2. Leer y tokenizar
-    with open(SOURCE_FILE, "r", encoding="utf-8") as f:
-        source_code = f.read()
+# try:
+#     # 2. Leer y tokenizar
+#     with open(SOURCE_FILE, "r", encoding="utf-8") as f:
+#         source_code = f.read()
     
-    lexer = Lexer(source_code)
-    tokens = list(lexer.tokenize())
-    for token in tokens:
-        print(f"{token.type}: {token.value} Línea {token.lineno}")
-    # 3. Parsear
-    parser = Parser(tokens)
-    ast = parser.parse()
-    print("AST generado:")
-    print(ast)
+#     lexer = Lexer(source_code)
+#     tokens = list(lexer.tokenize())
+#     for token in tokens:
+#         print(f"{token.type}: {token.value} Línea {token.lineno}")
+#     # 3. Parsear
+#     parser = Parser(tokens)
+#     ast = parser.parse()
+#     print("AST generado:")
+#     print(ast)
     
-    # 4. Convertir a JSON 
-    def ast_to_dict(node):
-        if isinstance(node, list):
-            return [ast_to_dict(item) for item in node]
-        elif hasattr(node, "__dict__"):
-            result = {"_type": node.__class__.__name__}  # Agrega tipo de nodo
-            result.update({k: ast_to_dict(v) for k, v in node.__dict__.items()})
-            return result
-        return node
+#     # 4. Convertir a JSON 
+#     def ast_to_dict(node):
+#         if isinstance(node, list):
+#             return [ast_to_dict(item) for item in node]
+#         elif hasattr(node, "__dict__"):
+#             result = {"_type": node.__class__.__name__}  # Agrega tipo de nodo
+#             result.update({k: ast_to_dict(v) for k, v in node.__dict__.items()})
+#             return result
+#         return node
 
-    # 5. Guardar resultados
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        json.dump(ast_to_dict(ast), f, indent=4, ensure_ascii=False)
+#     # 5. Guardar resultados
+#     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+#         json.dump(ast_to_dict(ast), f, indent=4, ensure_ascii=False)
     
-    # 6. Feedback al usuario
-    print(f"✓ Análisis completado: {len(tokens)} tokens procesados")
-    print(f"• AST guardado en: {os.path.abspath(OUTPUT_FILE)}")
-    print(f"• Tamaño del AST: {len(ast)} nodos principales")
+#     # 6. Feedback al usuario
+#     print(f"✓ Análisis completado: {len(tokens)} tokens procesados")
+#     print(f"• AST guardado en: {os.path.abspath(OUTPUT_FILE)}")
+#     print(f"• Tamaño del AST: {len(ast)} nodos principales")
 
-except FileNotFoundError:
-    print(f"Error: No se encontró el archivo '{SOURCE_FILE}'")
-except Exception as e:
-    print(f"Error durante el análisis: {str(e)}")
+# except FileNotFoundError:
+#     print(f"Error: No se encontró el archivo '{SOURCE_FILE}'")
+# except Exception as e:
+#     print(f"Error durante el análisis: {str(e)}")

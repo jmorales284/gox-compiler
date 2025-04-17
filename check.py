@@ -92,6 +92,9 @@ class Checker(Visitor):
 		1. Si se ha definido n.expr, validar que sea del mismo tipo de la función
 		'''
 		# Revisar que se esta dentro de una funcion
+		if '$func' not in env:
+			error(f"'{n}' por fuera de una funcion", n.lineno)
+			return
 		
 		# Si se ha definido n.expr, validar que sea del mismo tipo de la función
 

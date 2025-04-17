@@ -3,7 +3,7 @@ from rich.table   import Table
 from rich.console import Console
 from rich         import print
 
-from goxats import Node
+from gmodel import Node
 
 class Symtab:
 	'''
