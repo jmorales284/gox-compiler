@@ -1,33 +1,27 @@
-/* ******************************************************************* *
- *                                                                     *
- * factorize.gox  (compilador gox)                                     *
- *                                                                     *
- * Dado un numero N, lo descompone en sus factores primos.             *
- * Ejemplo: 21 = 3x7                                                   *
- *                                                                     *
- ********************************************************************* *
- */
+func mod(x int, y int) int {
+	return x - (x/y) * y;
+}
 
 func isprime(n int) bool {
     if n < 2 {
         return false;
     }
-    var i int = 2;
-    while i * i <= n {
-        if n % i == 0 {
-            return false;
-        }
-        i = i + 1;
-    }
+    // var i int = 2;
+    // while i * i <= n {
+    //     if mod(n, i) == 0 {
+    //         return false;
+    //     }
+    //     i = i + 1;
+    // }
     return true;
 }
 
-func factorize(n int) void {
+func factorize(n int) int {
     var factor int = 2;
-    print "factores primos de " + n + ": ";
+    // print "factores primos de " + n + ": ";
 
     while n > 1 {
-        while n % factor == 0 {  // El error aquí era `n * factor == 0`
+        while mod(n, factor) == 0 {
             print factor;
             n = n / factor;
         }
@@ -35,5 +29,6 @@ func factorize(n int) void {
     }
 }
 
-isprime(2); // true
-factorize(21); // 3 7
+var num int = 21;
+print factorize(num);
+
