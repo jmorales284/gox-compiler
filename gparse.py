@@ -411,45 +411,7 @@ def save_ast_to_json(ast, filename="ast_output.json"):
 
 #Prueba rápida de la gramática
 data = '''
-/* ******************************************************************* *
- *                                                                     *
- * factorize.gox  (compilador gox)                                     *
- *                                                                     *
- * Dado un numero N, lo descompone en sus factores primos.             *
- * Ejemplo: 21 = 3x7                                                   *
- *                                                                     *
- ********************************************************************* *
- */
-
-func isprime(n int) bool {
-    if n < 2 {
-        return false;
-    }
-    var i int = 2;
-    while i * i <= n {
-        if n * i == 0 {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-func factorize(n int) {
-    var factor int = 2;
-    //print "factores primos de " + n + ": ";
-
-    while n > 1 {
-        while n * factor == 0 {  // El error aquí era `n * factor == 0`
-            print factor;
-            n = n / factor;
-        }
-        factor = factor + 1;
-    }
-}
-
-
-const n int = isprime(2); 
+print isprime(2); 
 '''
 tokens = list(GoxLexer().tokenize(data))
 ast = GoxParser().parse(iter(tokens))

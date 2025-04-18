@@ -1,27 +1,14 @@
 {
     "statements": [
         {
-            "name": "(",
-            "parameters": ")",
-            "return_type": "{"
-        },
-        {
-            "name": "(",
-            "parameters": ")",
-            "return_type": "{"
-        },
-        {
-            "name": "n",
-            "type": "int",
-            "value": {
+            "expression": {
                 "name": "isprime",
                 "arguments": [
                     {
                         "value": 2
                     }
                 ]
-            },
-            "is_const": true
+            }
         }
     ]
 }
