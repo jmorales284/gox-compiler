@@ -221,7 +221,10 @@ class Checker(Visitor):
         2. Verifica el bloque "then".
         3. Verifica el bloque "else" si existe.
         '''
-        node.children[0].value.accept(self, env)  # Condición
+        # Verifica el tipo de la condición
+        condition_type = node.children[0].value.accept(self, env)
+        if condition_type != 'bool':
+            error(f"Error: La condición debe ser de tipo booleano, pero se encontró '{condition_type}'.")
 
         
         # Verifica el bloque "then"
@@ -242,7 +245,11 @@ class Checker(Visitor):
         2. Verifica el cuerpo del bucle.
         '''
         # Verifica la condición
-        node.condition.accept(self, env)
+        condition_type = node.condition.accept(self, env)
+        if condition_type != 'bool':
+            error(f"Error: La condición del bucle while debe ser de tipo booleano, pero se encontró '{condition_type}'.")
+        
+
         # Verifica el cuerpo del bucle
         stmts = node.body
         for stmt in stmts:
