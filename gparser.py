@@ -281,10 +281,10 @@ class Parser:
     # Métodos de análisis de expresiones
     def factor(self):
         if self.match("true"):
-            return Literal("true", 'bool')
+            return Literal("bool", 'true')
         
         elif self.match("false"):
-            return Literal("false", 'bool')
+            return Literal("bool", 'false')
     
         elif self.match("INTEGER"):
             return Literal('int',self.tokens[self.current - 1].value)
