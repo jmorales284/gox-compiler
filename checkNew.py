@@ -26,11 +26,9 @@ class Checker(Visitor):
         Verifica el nodo raíz del programa.
         Recorre cada sentencia en el programa y las verifica.
         '''
-        print("Verificando el nodo raíz del programa")
         for stmt in node.stmts:
             stmt.accept(self, env)
         env.print()
-        print("Verificación del programa completada")
         print("___________________________________")
 
     def visit_VariableDeclaration(self, node: VariableDeclaration, env: Symtab):
