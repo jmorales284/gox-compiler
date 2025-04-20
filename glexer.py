@@ -1,4 +1,25 @@
 import re
+"""
+Este archivo implementa el analizador léxico (Lexer) para el compilador GOX.
+
+El analizador léxico convierte el código fuente en una lista de tokens, que son las unidades básicas 
+de significado en el lenguaje. Cada token incluye información sobre su tipo, valor y la línea en la 
+que se encuentra en el código fuente.
+
+Características principales:
+- Reconoce palabras clave como `func`, `if`, `while`, `return`, etc.
+- Identifica operadores de uno y dos caracteres (`+`, `-`, `<=`, `==`, etc.).
+- Soporta literales como enteros, flotantes, caracteres y booleanos.
+- Maneja comentarios de línea (`//`) y de bloque (`/* */`).
+- Detecta errores léxicos, como caracteres ilegales o comentarios no terminados, e informa la línea 
+  donde ocurre el problema.
+
+Clases principales:
+- `Token`: Representa un token con su tipo, valor y número de línea.
+- `Lexer`: Implementa el proceso de tokenización, recorriendo el código fuente y generando tokens.
+
+El lexer es la primera etapa del compilador y prepara la entrada para el analizador sintáctico.
+"""
 
 class Token:
     def __init__(self, type: str, value: str, lineno: int):

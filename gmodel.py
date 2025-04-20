@@ -1,3 +1,24 @@
+"""
+Este archivo define el modelo del Árbol de Sintaxis Abstracta (AST) para el compilador GOX.
+
+Cada clase en este archivo representa un tipo de nodo en el AST, como declaraciones de variables, 
+funciones, estructuras de control (if, while), operaciones binarias, y más. 
+
+El modelo utiliza un patrón de visitante (Visitor Pattern) para permitir que diferentes componentes 
+del compilador (como el analizador semántico) recorran y procesen el AST de manera uniforme.
+
+Clases principales:
+- Node: Clase base para todos los nodos del AST.
+- Program: Nodo raíz que representa el programa completo.
+- VariableDeclaration, FunctionDefinition: Representan declaraciones de variables y funciones.
+- WhileLoop, Conditional: Representan estructuras de control.
+- BinaryOperation, UnaryOperation: Representan operaciones aritméticas y lógicas.
+- Otros nodos específicos como Return, Break, Continue, y más.
+
+Cada nodo incluye información relevante como el tipo de nodo, sus hijos, y la línea del código fuente 
+donde se encuentra, para facilitar la generación de errores y el análisis semántico.
+"""
+
 class Visitor:
     def visit(self,node,env):
         method_name = 'visit_' + node.__class__.__name__

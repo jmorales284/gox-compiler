@@ -1,3 +1,33 @@
+"""
+Este archivo implementa el analizador sintáctico (Parser) para el compilador GOX.
+
+El analizador sintáctico convierte una lista de tokens generada por el analizador léxico en un Árbol 
+de Sintaxis Abstracta (AST). Este AST representa la estructura jerárquica del programa y es utilizado 
+por el analizador semántico para realizar verificaciones adicionales.
+
+Características principales:
+- Soporta declaraciones de variables, funciones, y estructuras de control (`if`, `while`, etc.).
+- Reconoce expresiones aritméticas, lógicas y llamadas a funciones.
+- Genera nodos AST con información sobre el tipo de construcción y la línea del código fuente.
+- Detecta errores de sintaxis y proporciona mensajes claros con el número de línea.
+
+Clases y métodos principales:
+- `Parser`: Clase principal que implementa el proceso de análisis sintáctico.
+  - `parse()`: Punto de entrada para generar el AST a partir de los tokens.
+  - `statement()`: Analiza declaraciones y sentencias como asignaciones, ciclos y condicionales.
+  - `expression()`: Analiza expresiones aritméticas y lógicas.
+  - `funcdecl()`: Analiza declaraciones de funciones.
+  - `vardecl()`: Analiza declaraciones de variables.
+  - `if_stmt()` y `while_stmt()`: Analizan estructuras de control.
+  - `factor()`: Analiza los elementos básicos de una expresión (literales, variables, llamadas a funciones).
+
+El parser utiliza un enfoque recursivo-descendente para construir el AST y maneja errores de sintaxis 
+de manera robusta, proporcionando mensajes claros al usuario.
+
+El analizador sintáctico es la segunda etapa del compilador y prepara el AST para el análisis semántico.
+"""
+
+
 from typing import List
 from dataclasses import dataclass
 from glexer import Lexer
@@ -6,6 +36,8 @@ from rich import print_json
 
 import json
 import os
+
+
 
 @dataclass
 class Token:
