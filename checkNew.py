@@ -123,7 +123,7 @@ class Checker(Visitor):
         left_type = node.left.accept(self, env)
         right_type = node.right.accept(self, env)
         result_type = check_binop(node.operator, left_type, right_type)
-        if result_type == 'error':
+        if result_type == 'error' or result_type is None:
             error(f"Error en operación binaria: tipos incompatibles '{left_type}' {node.operator} '{right_type}'")
         return result_type
 
