@@ -16,8 +16,8 @@ with open(SOURCE_FILE, "r", encoding="utf-8") as f:
 
 lexer = Lexer(source_code)
 tokens = list(lexer.tokenize())
-# for token in tokens:
-#     print(f"{token.type}: {token.value} Línea {token.lineno}")
+for token in tokens:
+    print(f"{token.type}: {token.value} Línea {token.lineno}")
 # 3. Parsear
 parser = Parser(tokens)
 ast = parser.parse()

@@ -218,7 +218,7 @@ class Checker(Visitor):
             error(f"Error: La variable '{node.name}' no está definida.")
             return
 
-        if symbol.is_constant:
+        if hasattr(symbol,'is_constant') and symbol.is_constant:
             error(f"Error: La variable '{node.name}' es constante y no se puede modificar.")
             return
         

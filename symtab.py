@@ -72,6 +72,11 @@ class Symtab:
 		o FuncDeclaration)
 		'''
 		if name in self.entries:
+			#Claves especaiales que inician con $
+			if name.startswith('$'):
+				self.entries[name] = value
+				return
+			
 			if self.entries[name].dtype != value.dtype:
 				raise Symtab.SymbolConflictError()
 			else:
