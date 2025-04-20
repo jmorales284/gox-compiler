@@ -202,6 +202,7 @@ class Literal(Node):
         super().__init__("Literal")
         self.type = type  # Tipo de dato (int, float, bool, char)
         self.value = value  # Valor del literal
+        self.name = value  # Nombre del literal (si aplica)
 
     def __repr__(self):
         return f'Literal({self.type}, {self.value})'

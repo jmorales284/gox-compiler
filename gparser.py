@@ -90,9 +90,11 @@ class Parser:
                 return self.while_stmt()
             elif self.peek().type == "break":
                 self.advance()
+                self.consume("SEMI", "Se esperaba ';' después de break")
                 return Break()
             elif self.peek().type == "continue":
                 self.advance()
+                self.consume("SEMI", "Se esperaba ';' después de continue")
                 return Continue()
             elif self.peek().type == "return":
                 return self.return_stmt()

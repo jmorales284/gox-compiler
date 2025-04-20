@@ -58,25 +58,47 @@ class Checker(Visitor):
         '''
         Verifica una definición de función:
         1. Verifica si la función ya está definida.
-        2. Crea un nuevo entorno para el cuerpo de la función.
-        3. Agrega los parámetros al entorno.
-        4. Verifica el cuerpo de la función.
+        2. Verifica que no haya funciones anidadas.
+        3. Crea un nuevo entorno para el cuerpo de la función.
+        4. Agrega los parámetros al entorno.
+        5. Verifica el cuerpo de la función.
+        6. Verifica que si hay un tipo de retorno diferente de void, haya un return.
         '''
+        # Verifica si la función ya está definida
         if env.get(node.name):
             error(f"Error: La función '{node.name}' ya está definida.")
+            return
+
+        # Verificar si ya estamos dentro de una función
+        if env.get('$func'):
+            error(f"Error: las funciones anidadas no están permitidas.")
             return
 
         env.add(node.name, node)
 
         # Nuevo entorno para el cuerpo
         local_env = Symtab("function:" + node.name, env)
-       
+
+        # Agregar variable para referenciar la función misma 
+        local_env.add('$func', node)
+
+        
         for param in node.parameters:
             name_param= param.name
             local_env.add(name_param, param)
 
+        # Verificar el cuerpo de la función
+        has_return = False
         for stmt in node.body:
+            if isinstance(stmt, Return):
+                has_return = True
             stmt.accept(self, local_env)
+
+        # Verificar si la función tiene un tipo de retorno diferente de void
+        if node.return_type != 'VOID' and not has_return:
+            error(f"Error: La función '{node.name}' debe tener un 'return' para el tipo de retorno '{node.return_type}'.")
+        
+        
 
     def visit_FunctionImport(self, node: FunctionImport, env: Symtab):
         '''
@@ -250,29 +272,54 @@ class Checker(Visitor):
             error(f"Error: La condición del bucle while debe ser de tipo booleano, pero se encontró '{condition_type}'.")
         
 
+        # Verifica el cuerpo del bucle si hay un break o continue
+        env.add('$loop', True)  # Marca que estamos dentro de un bucle
+
         # Verifica el cuerpo del bucle
         stmts = node.body
         for stmt in stmts:
             stmt.accept(self, env)
+        
+        # Elimina la bandera al salir del bucle
+        env.__setitem__('$loop', False)
 
     def visit_Break(self, node: Break, env: Symtab):
         '''
-        Nada que verificar. `break` se permite dentro de bucles.
+        Verifica que el break esté dentro de un bucle while.
+        Si no está dentro de un bucle, lanza un error.
         '''
+        if not env.get('$loop'):
+            error(f"Error: 'break' fuera de un bucle while.")
+            return
+        # Si está dentro de un bucle, no se necesita hacer nada
+        # ya que el break es válido.
         pass
 
     def visit_Continue(self, node: Continue, env: Symtab):
         '''
-        Nada que verificar. `continue` se permite dentro de bucles.
+        verifica que el continue esté dentro de un bucle while.
+        Si no está dentro de un bucle, lanza un error.
         '''
+        if not env.get('$loop'):
+            error(f"Error: 'continue' fuera de un bucle while.")
+            return
         pass
 
     def visit_Return(self, node: Return, env: Symtab):
         '''
         Verifica la expresión de retorno (si existe).
+        verificar que este dentro de una función.
+        Verifica que el tipo de retorno coincida con el tipo de la función.
         '''
+        func = env.get('$func')
+        if not env.get('$func'):
+            error(f"Error: 'return' fuera de una función.")
+            return
         if node.expression:
-            node.expression.value.accept(self, env)
+            return_type=node.expression.value.accept(self, env)
+            func_type = func.return_type
+            if return_type != func_type:
+                error(f"Error: Tipo de retorno '{return_type}' no coincide con el tipo de la función '{func.name}' que es '{func_type}'.")
 
     def visit_Print(self, node: Print, env: Symtab):
         '''
