@@ -295,14 +295,6 @@ class Parser:
             processed_char = char_value[1:-1].encode().decode('unicode_escape')
             return Literal('char',processed_char)
         
-        elif self.match("STRING_LITERAL"):
-            string_tokens = []
-            while self.peek() and self.peek().type != "STRING_LITERAL":
-                string_tokens.append(self.advance().value)
-            self.consume("STRING_LITERAL", "Se esperaba cierre de comillas")
-            string_value = "".join(string_tokens)
-            return Literal('string',string_value)
-        
         elif self.match("BOOLEAN"):
             return Literal('bool',self.tokens[self.current - 1].value.lower())
         

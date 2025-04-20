@@ -1,218 +1,284 @@
-# check.py
-'''
-Este archivo contendrá la parte de verificación/validación de tipos
-del compilador.  Hay varios aspectos que deben gestionarse para
-que esto funcione. Primero, debe tener una noción de "tipo" en su compilador.
-Segundo, debe administrar los entornos y el alcance para manejar los
-nombres de las definiciones (variables, funciones, etc.).
-
-Una clave para esta parte del proyecto es realizar pruebas adecuadas.
-A medida que agregue código, piense en cómo podría probarlo.
-'''
-from collections import ChainMap
-from rich    import print
-from typing  import Union, List
-
-
-from errors   import error, errors_detected
-from gmodel   import *
-from symtab  import Symtab
-from typesys import typenames, check_binop, check_unaryop
-
+from typing import List
+from gmodel import *
+from symtab import Symtab
+from errors import error
+from typesys import check_binop
 
 class Checker(Visitor):
-	@classmethod
-	def check(cls, n:Node):
-		'''
-		1. Crear una nueva tabla de simbolos
-		2. Visitar todas las declaraciones
-		'''
-		check = cls()
-		env = Symtab()
-		n.accept(check, env)
-		return check
+    @classmethod
+    def check(cls, node: Node):
+        '''
+        Punto de entrada para iniciar la verificación semántica.
+        1. Crea una nueva tabla de símbolos global.
+        2. Inicia la visita al nodo raíz.
+        '''
+        checker = cls()
+        env = Symtab("global")
+        node.accept(checker, env)
+        return checker
 
-	def visit(self, n:Program, env:Symtab):
-		'''
-		1. recorrer la lista de elementos
-		'''
-		for stmt in n.stmts:
-			stmt.accept(self, env)
+    # ----------------------
+    # NODOS DE DECLARACIÓN
+    # ----------------------
 
-	# Statements
+    def visit_Program(self, node: Program, env: Symtab):
+        '''
+        Verifica el nodo raíz del programa.
+        Recorre cada sentencia en el programa y las verifica.
+        '''
+        print("Verificando el nodo raíz del programa")
+        for stmt in node.stmts:
+            stmt.accept(self, env)
+        env.print()
+        print("Verificación del programa completada")
+        print("___________________________________")
 
-	def visit(self, n:Assignment, env:Symtab):
-		# Validar n.loc
-		loc_type = n.loc.accept(self, env)
+    def visit_VariableDeclaration(self, node: VariableDeclaration, env: Symtab):
+        '''
+        Verifica una declaración de variable.
+        1. Revisa si ya existe una variable con el mismo nombre.
+        2. Si hay un valor inicial, revisa que su tipo coincida con el tipo declarado.
+        3. Agrega la variable a la tabla de símbolos.
+        '''
+        if env.get(node.name):
+            error(f"Error: La variable '{node.name}' ya está definida.")
+            return
 
-		#visitar n.expr
-		expr_type = n.expr.accept(self, env)
+        # Si hay valor inicial, verificar su tipo
+        if node.value:
+            var_decl_type = node.var_type
+            value_type = node.value.accept(self, env)
+            if var_decl_type != value_type:
+                error(f"Error: Tipo de variable '{node.name}' no coincide con el tipo de valor inicial.")
 
-		# Verificar si son tipos compatibles
-		return check_binop('=', loc_type, expr_type)
+        # Registrar variable en el entorno actual
+        env.add(node.name, node)
 
-	def visit(self, n:Print, env:Symtab):
-		#visitar n.expr
-		return n.expr.accept(self, env)
+    def visit_FunctionDefinition(self, node: FunctionDefinition, env: Symtab):
+        '''
+        Verifica una definición de función:
+        1. Verifica si la función ya está definida.
+        2. Crea un nuevo entorno para el cuerpo de la función.
+        3. Agrega los parámetros al entorno.
+        4. Verifica el cuerpo de la función.
+        '''
+        if env.get(node.name):
+            error(f"Error: La función '{node.name}' ya está definida.")
+            return
 
-	def visit(self, n:Conditional, env:Symtab):
+        env.add(node.name, node)
 
-		# Visitar n.test (validar tipos)
-		n.test.accept(self, env)
+        # Nuevo entorno para el cuerpo
+        local_env = Symtab("function:" + node.name, env)
+       
+        for param in node.parameters:
+            name_param= param.name
+            local_env.add(name_param, param)
 
-		# Visitar Stament por n.then
-		for stmt in n.cons:
-			stmt.accept(self, env)
-		# Si existe opcion n.else_, visitar
-			
-	def visit(self, n:WhileLoop, env:Symtab):
-		# Visitar n.test (validar tipos)
-		n.test.accept(self, env)
+        for stmt in node.body:
+            stmt.accept(self, local_env)
 
-		#
-		env['$loop'] = True
+    def visit_FunctionImport(self, node: FunctionImport, env: Symtab):
+        '''
+        Registra una función importada (declaración externa) en la tabla de símbolos.
+        '''
+        if env.get(node.name):
+            error(f"Error: La función '{node.name}' ya está definida.")
+            return
 
-		# visitar n.body
-		for b in n.body:
-			b.accept(self, env)
-		env['$loop'] = False
+        env.add(node.name, node)
 
+    # ----------------------
+    # NODOS DE EXPRESIÓN
+    # ----------------------
 
-		
-	def visit(self, n:Union[Break, Continue], env:Symtab):
-		# Verificar que esta dentro de un ciclo while
-		if not env['$loop']:
-			error(f"'{n} por fuera de un ciclo while'", n.lineno)
-			
+    def visit_Literal(self, node: Literal, env: Symtab):
+        '''
+        Retorna el tipo de dato del literal.
+        '''
+        return node.type
 
+    def visit_PrimitiveReadLocation(self, node: PrimitiveReadLocation, env: Symtab):
+        '''
+        Verifica que la variable esté declarada antes de ser usada.
+        Retorna su tipo.
+        '''
+        symbol = env.get(node.name)
+        if not symbol:
+            error(f"La variable '{node.name}' no está declarada.")
+            return 'error'
+        return_type = None
+        if isinstance(symbol, Parameter):
+            return_type = symbol.type 
+        elif isinstance(symbol, VariableDeclaration):
+            return_type = symbol.var_type
+        return return_type
 
-			
-	def visit(self, n:Return, env:Symtab):
-		'''
-		1. Si se ha definido n.expr, validar que sea del mismo tipo de la función
-		'''
-		# Revisar que se esta dentro de una funcion
-		if '$func' not in env:
-			error(f"'{n}' por fuera de una funcion", n.lineno)
-			return
-		
-		# Si se ha definido n.expr, validar que sea del mismo tipo de la función
+    def visit_BinaryOperation(self, node: BinaryOperation, env: Symtab):
+        '''
+        Verifica una operación binaria.
+        1. Evalúa los tipos de ambos operandos.
+        2. Usa `check_binop` para verificar compatibilidad.
+        '''
+        left_type = node.left.accept(self, env)
+        right_type = node.right.accept(self, env)
+        result_type = check_binop(node.operator, left_type, right_type)
+        if result_type == 'error':
+            error(f"Error en operación binaria: tipos incompatibles '{left_type}' {node.operator} '{right_type}'")
+        return result_type
 
-		# Visitar Expression
-		n.expr.accept(self, env)
-	
+    def visit_UnaryOperation(self, node: UnaryOperation, env: Symtab):
+        '''
+        Verifica una operación unaria.
+        1. Evalúa el tipo del operando.
+        2. Retorna el tipo resultante (dependiendo del operador).
+        '''
+        operand_type = node.operand.accept(self, env)
+        # Aquí puedes añadir reglas de tipo según el operador
+        return operand_type
 
+    def visit_FunctionCall(self, node: FunctionCall, env: Symtab):
+        '''
+        Verifica una llamada a función:
+        1. Verifica que la función esté declarada.
+        2. Verifica el número de argumentos y sus tipos.
+        '''
+        func = env.get(node.name)
+        if not func:
+            error(f"Error: La función '{node.name}' no está declarada.")
+            return 'error'
 
-	# Declarations
+        if len(func.parameters) != len(node.arguments):
+            error(f"Error: Número incorrecto de argumentos para función '{node.name}'.")
+            return 'error'
+        
+        #Visitar argumentos(si están definidos) y verificar que cada argumento sea compatible con cada parámetro de la función
+        node_arguments= node.arguments
+        func_parameters= func.parameters
+        for param, arg in zip(func_parameters,node_arguments):
+            arg_type = arg.accept(self, env)
+            param_type = param.type
+            if param_type != arg_type:
+                error(f"Error: Tipo de argumento '{arg.name}' no coincide con el tipo de parámetro '{param.name}'. Esperado {param_type}, recibido {arg_type}.")
 
-	def visit(self, n:VariableDeclaration, env:Symtab):
-		# Asignar tipo a la constante
-		n.type = n.value.accept(self, env)
+        return func.return_type
 
-		# Agregar a la tabla de simbolos
-		env.add(n.name, n)
+    def visit_TypeConversion(self, node: TypeConversion, env: Symtab):
+        '''
+        Verifica una conversión de tipo. Se asume que cualquier conversión es válida.
+        '''
+        expr_type = node.expression.accept(self, env)
+        return node.target_type
 
-	def visit(self, n:VariableDeclaration, env:Symtab):
-		# Agregar n.name a la TS actual
-		env.add(n.name, n)
-		if n.value:
-			dtype = n.value.accept(self, env)
-			return check_binop('=', n.type, dtype)
-		
+    # ----------------------
+    # NODOS DE ASIGNACIÓN
+    # ----------------------
 
-	def visit(self, n:FunctionDefinition, env:Symtab):
-		# Guardar la función en la TS actual
-		env.add(n.name, n)
+    def visit_Assignment(self, node: Assignment, env: Symtab):
+        '''
+        Verifica una asignación.
+        1. Visita la ubicación (location).
+        2. Evalúa la expresión.
+        3. Verifica que ambos tipos sean compatibles.
+        '''
+        return node.location.accept(self, env)
 
-		# Crear una nueva TS para la función
-		env = Symtab(n.name, env)
+    def visit_PrimitiveAssignmentLocation(self, node: PrimitiveAssignmentLocation, env: Symtab):
+        '''
+        Verifica la asignación a una variable primitiva:
+        1. Revisa que la variable exista.
+        2. Verifica que no sea constante.
+        3. Evalúa la expresión asignada.
+        4. Compara tipos.
+        '''
+        symbol = env.get(node.name)
+        if not symbol:
+            error(f"Error: La variable '{node.name}' no está definida.")
+            return
 
-		# Variable para referenciar la funcion
-		env['$func'] = True
+        if symbol.is_constant:
+            error(f"Error: La variable '{node.name}' es constante y no se puede modificar.")
+            return
+        
+        expr_type = node.expression.accept(self, env)
+        declared_type = None
+        if isinstance(symbol, Parameter):
+            declared_type = symbol.type
+        elif isinstance(symbol, VariableDeclaration):
+            declared_type = symbol.var_type
 
-		# Agregar todos los n.params dentro de la TS
-		for p in n.params:
-			p.accept(self, env)
+        if declared_type != expr_type:
+            error(f"Error: Tipo incompatible en asignación a '{node.name}'. Esperado {declared_type}, recibido {expr_type}.")
 
-		# Visitar n.stmts
-		for stmt in n.stmts:
-			stmt.accept(self, env)
-		
-		env['$func'] = False
+    # ----------------------
+    # NODOS DE CONTROL
+    # ----------------------
 
+    def visit_Conditional(self, node: Conditional, env: Symtab):
+        '''
+        Verifica una estructura condicional if-else.
+        1. Evalúa la condición.
+        2. Verifica el bloque "then".
+        3. Verifica el bloque "else" si existe.
+        '''
+        node.children[0].value.accept(self, env)  # Condición
 
-	def visit(self, n:Parameter, env:Symtab):
-		# Guardar el parametro (name, type) en TS
-		env.add(n.name, n)
-		
-	# Expressions
+        
+        # Verifica el bloque "then"
+        then_block = node.children[1].value
+        for stmt in then_block:
+            stmt.accept(self, env)
 
-	def visit(self, n:Literal, env:Symtab):
+        # Verifica el bloque "else" si existe
+        if len(node.children) == 3:
+            else_block = node.children[2].value
+            for stmt in else_block:
+                stmt.accept(self, env)
 
-		# Retornar el tipo de la literal
-		# Los literales primitivos basicos ya tienen un tipo definido en la estructura del ast (model.py)
-		return n.type
+    def visit_WhileLoop(self, node: WhileLoop, env: Symtab):
+        '''
+        Verifica un bucle while:
+        1. Evalúa que la condición sea booleana.
+        2. Verifica el cuerpo del bucle.
+        '''
+        # Verifica la condición
+        node.condition.accept(self, env)
+        # Verifica el cuerpo del bucle
+        stmts = node.body
+        for stmt in stmts:
+            stmt.accept(self, env)
 
-	def visit(self, n:BinaryOperation, env:Symtab):
-		# visitar n.left y luego n.right
-		left_type = n.left.accept(self, env)
-		right_type = n.right.accept(self, env)
+    def visit_Break(self, node: Break, env: Symtab):
+        '''
+        Nada que verificar. `break` se permite dentro de bucles.
+        '''
+        pass
 
-		# Verificar si son tipos compatibles
-		return check_binop(n.opr, left_type, right_type)
-		
-	def visit(self, n:UnaryOperation, env:Symtab):
-		'''
-		1. visitar n.expr
-		2. validar si es un operador unario valido
-		'''
-		type1 = n.expr.accept(self, env)
-		return check_unaryop(n.opr, type1)
+    def visit_Continue(self, node: Continue, env: Symtab):
+        '''
+        Nada que verificar. `continue` se permite dentro de bucles.
+        '''
+        pass
 
-	def visit(self, n:TypeConversion, env:Symtab):
-		# Visitar n.expr para validar
-		n.expr.accept(self, env)
+    def visit_Return(self, node: Return, env: Symtab):
+        '''
+        Verifica la expresión de retorno (si existe).
+        '''
+        if node.expression:
+            node.expression.value.accept(self, env)
 
-		# Retornar el tipo del cast n.type
-		return n.type
+    def visit_Print(self, node: Print, env: Symtab):
+        '''
+        Verifica la expresión dentro del print.
+        '''
+        node.children[0].value.accept(self, env)
 
-	def visit(self, n:FunctionCall, env:Symtab):
-		'''
-		3. verificar que len(n.args) == len(func.params)
-		4. verificar que cada arg sea compatible con cada param de la función
-		'''
-		# Validar si n.name existe
-		func = env.get(n.name)
-		if func is None:
-			error(f"'{n.name}' no es una funcion definida", n.lineno)
-			return
-		
-		# Verificar que len(n.args) == len(func.params)
-		if len(n.args) != len(func.params):
-			error(f"El numero de argumentos no coincide con la declaracion de la funcion '{n.name}'", n.lineno)
-			return
-		
-		# Visitar n.args (si estan definidos) y verifica que cada arg sea compatible con cada param de la función
-		for param, arg in zip(func.params, n.args):
-			arg_type = arg.accept(self, env)
-			if param.type != arg_type:
-				error(f"El tipo de argumento '{arg.name}' no es compatible con el tipo de parametro '{param.name}'", n.lineno)
+    # ----------------------
+    # GENERIC VISIT
+    # ----------------------
 
-	def visit(self, n:NamedLocation, env:Symtab):
-		'''
-		1. Verificar si n.name existe en TS y obtener el tipo
-		2. Retornar el tipo
-		'''
-		# Verificar si n.name existe en TS y obtener el tipo
-		node = env.get(n.name)
-
-		# Retornar el tipo
-		if node: return node.type
-		error(f"'{n.name}' no es una variable definida", n.lineno)
-
-	def visit(self, n:MemoryLocation, env:Symtab):
-		'''
-		1. Visitar n.address (expression) para validar
-		2. Retornar el tipo de datos
-		'''
-		pass
+    def generic_visit(self, node, env):
+        '''
+        Lanza una advertencia si no hay un método específico para el nodo.
+        '''
+        print(f"Warning: No visit method for {node.__class__.__name__}")

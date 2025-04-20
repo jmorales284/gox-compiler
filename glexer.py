@@ -31,7 +31,8 @@ class Lexer:
     NAME_PAT = re.compile(r'[a-zA-Z_][a-zA-Z_0-9]*')
     INTEGER_PAT = re.compile(r'\d+')
     FLOAT_PAT = re.compile(r'\d+\.\d*|\.\d+')
-    CHAR_PAT = re.compile(r"'([^\\]|\\[n'\\x[0-9A-Fa-f]{2}])'")
+    CHAR_PAT = re.compile(r"'(\\.|[^\\'])'")
+
     BOOL_PAT = re.compile(r'\b(true|false)\b')
     COMMENT_LINE_PAT = re.compile(r'//.*')
     COMMENT_BLOCK_PAT = re.compile(r'/\*.*?\*/', re.DOTALL)
@@ -113,7 +114,7 @@ class Lexer:
 
             m = self.CHAR_PAT.match(self.text, self.index)
             if m:
-                self.tokens.append(Token('CHAR', m.group(0), self.lineno))
+                self.tokens.append(Token('CHAR', m.group(1), self.lineno))
                 self.index = m.end()
                 continue
 

@@ -191,6 +191,7 @@ class Parameter(Node):
         super().__init__("Parameter")
         self.name = name
         self.type = type
+        self.is_constant = False  # Por defecto, no es constante
 
     def __repr__(self):
         return f'Parameter({self.name}, {self.type})'
