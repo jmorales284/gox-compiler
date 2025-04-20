@@ -2,6 +2,7 @@ from typing import List
 from dataclasses import dataclass
 from glexer import Lexer
 from gmodel import *
+from rich import print_json
 
 import json
 import os
@@ -17,11 +18,11 @@ class Parser:
         self.tokens = tokens
         self.current = 0
 
-    def parse(self) -> List[Node]:
+    def parse(self) -> Program:
         statements = []
         while self.current < len(self.tokens) and self.tokens[self.current].type != "EOF":
             statements.append(self.statement())
-        return statements
+        return Program(statements)
 
     # def statement(self) -> Node:
     #     if self.is_function_call():
@@ -145,7 +146,6 @@ class Parser:
 
     def vardecl(self) -> VariableDeclaration:
         
-        
         is_constant = self.match("const")
         if not is_constant:
             self.consume("var", "Se esperaba 'var' o 'const'")
@@ -157,10 +157,12 @@ class Parser:
         var_type = None
         if self.peek() and self.peek().type in {"int", "float", "bool", "char"}:
             var_type = self.advance().value
+
         
         # Manejar asignación (opcional)
         value = None
         if self.match("ASSIGN"):
+
             value = self.expression()
         
         # Consumir el punto y coma final
@@ -175,12 +177,15 @@ class Parser:
                 f"Se esperaba ';' pero se encontró '{current_token.value if current_token else 'EOF'}'"
             ) from e
         
-        return VariableDeclaration(
+        
+        declaration=VariableDeclaration(
             name=name_token.value,
             var_type=var_type,  # Ahora incluye el tipo si fue especificado
             value=value,
             is_constant=is_constant
         )
+
+        return declaration
 
 
 
@@ -280,15 +285,15 @@ class Parser:
             return Literal("false", 'bool')
     
         elif self.match("INTEGER"):
-            return Literal(self.tokens[self.current - 1].value, 'int')
+            return Literal('int',self.tokens[self.current - 1].value)
         
-        elif self.match("FLOAT_LITERAL"):
-            return Literal(self.tokens[self.current - 1].value, 'float')
+        elif self.match("FLOAT"):
+            return Literal('float',self.tokens[self.current - 1].value)
         
         elif self.match("CHAR_LITERAL"):
             char_value = self.tokens[self.current - 1].value
             processed_char = char_value[1:-1].encode().decode('unicode_escape')
-            return Literal(processed_char, 'char')
+            return Literal('char',processed_char)
         
         elif self.match("STRING_LITERAL"):
             string_tokens = []
@@ -296,10 +301,10 @@ class Parser:
                 string_tokens.append(self.advance().value)
             self.consume("STRING_LITERAL", "Se esperaba cierre de comillas")
             string_value = "".join(string_tokens)
-            return Literal(string_value, 'string')
+            return Literal('string',string_value)
         
         elif self.match("BOOLEAN"):
-            return Literal(self.tokens[self.current - 1].value.lower(), 'bool')
+            return Literal('bool',self.tokens[self.current - 1].value.lower())
         
         elif self.match("PLUS") or self.match("MINUS") or self.match("GROW"):
             op = self.tokens[self.current - 1].type
@@ -484,43 +489,45 @@ class Parser:
 
 
 
-# 1. Cargar código fuente
-SOURCE_FILE = "factorize.gox"  # Nombre del archivo de entrada
-OUTPUT_FILE = "ast_output.json"  # Nombre del archivo de salida
+# # 1. Cargar código fuente
+# SOURCE_FILE = "factorize.gox"  # Nombre del archivo de entrada
+# OUTPUT_FILE = "ast_output.json"  # Nombre del archivo de salida
 
-try:
-    # 2. Leer y tokenizar
-    with open(SOURCE_FILE, "r", encoding="utf-8") as f:
-        source_code = f.read()
+# try:
+#     # 2. Leer y tokenizar
+#     with open(SOURCE_FILE, "r", encoding="utf-8") as f:
+#         source_code = f.read()
     
-    lexer = Lexer(source_code)
-    tokens = list(lexer.tokenize())
-    for token in tokens:
-        print(f"{token.type}: {token.value} Línea {token.lineno}")
-    # 3. Parsear
-    parser = Parser(tokens)
-    ast = parser.parse()
+#     lexer = Lexer(source_code)
+#     tokens = list(lexer.tokenize())
+#     for token in tokens:
+#         print(f"{token.type}: {token.value} Línea {token.lineno}")
+#     # 3. Parsear
+#     parser = Parser(tokens)
+#     ast = parser.parse()
+#     print("AST generado:")
+#     print(ast)
     
-    # 4. Convertir a JSON 
-    def ast_to_dict(node):
-        if isinstance(node, list):
-            return [ast_to_dict(item) for item in node]
-        elif hasattr(node, "__dict__"):
-            result = {"_type": node.__class__.__name__}  # Agrega tipo de nodo
-            result.update({k: ast_to_dict(v) for k, v in node.__dict__.items()})
-            return result
-        return node
+#     # 4. Convertir a JSON 
+#     def ast_to_dict(node):
+#         if isinstance(node, list):
+#             return [ast_to_dict(item) for item in node]
+#         elif hasattr(node, "__dict__"):
+#             result = {"_type": node.__class__.__name__}  # Agrega tipo de nodo
+#             result.update({k: ast_to_dict(v) for k, v in node.__dict__.items()})
+#             return result
+#         return node
 
-    # 5. Guardar resultados
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        json.dump(ast_to_dict(ast), f, indent=4, ensure_ascii=False)
+#     # 5. Guardar resultados
+#     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+#         json.dump(ast_to_dict(ast), f, indent=4, ensure_ascii=False)
     
-    # 6. Feedback al usuario
-    print(f"✓ Análisis completado: {len(tokens)} tokens procesados")
-    print(f"• AST guardado en: {os.path.abspath(OUTPUT_FILE)}")
-    print(f"• Tamaño del AST: {len(ast)} nodos principales")
+#     # 6. Feedback al usuario
+#     print(f"✓ Análisis completado: {len(tokens)} tokens procesados")
+#     print(f"• AST guardado en: {os.path.abspath(OUTPUT_FILE)}")
+#     print(f"• Tamaño del AST: {len(ast)} nodos principales")
 
-except FileNotFoundError:
-    print(f"Error: No se encontró el archivo '{SOURCE_FILE}'")
-except Exception as e:
-    print(f"Error durante el análisis: {str(e)}")
+# except FileNotFoundError:
+#     print(f"Error: No se encontró el archivo '{SOURCE_FILE}'")
+# except Exception as e:
+#     print(f"Error durante el análisis: {str(e)}")

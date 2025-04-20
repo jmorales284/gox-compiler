@@ -55,7 +55,7 @@ class Checker(Visitor):
 		#visitar n.expr
 		return n.expr.accept(self, env)
 
-	def visit(self, n:If, env:Symtab):
+	def visit(self, n:Conditional, env:Symtab):
 
 		# Visitar n.test (validar tipos)
 		n.test.accept(self, env)
@@ -65,7 +65,7 @@ class Checker(Visitor):
 			stmt.accept(self, env)
 		# Si existe opcion n.else_, visitar
 			
-	def visit(self, n:While, env:Symtab):
+	def visit(self, n:WhileLoop, env:Symtab):
 		# Visitar n.test (validar tipos)
 		n.test.accept(self, env)
 
@@ -92,6 +92,9 @@ class Checker(Visitor):
 		1. Si se ha definido n.expr, validar que sea del mismo tipo de la función
 		'''
 		# Revisar que se esta dentro de una funcion
+		if '$func' not in env:
+			error(f"'{n}' por fuera de una funcion", n.lineno)
+			return
 		
 		# Si se ha definido n.expr, validar que sea del mismo tipo de la función
 
@@ -102,14 +105,14 @@ class Checker(Visitor):
 
 	# Declarations
 
-	def visit(self, n:Constant, env:Symtab):
+	def visit(self, n:VariableDeclaration, env:Symtab):
 		# Asignar tipo a la constante
 		n.type = n.value.accept(self, env)
 
 		# Agregar a la tabla de simbolos
 		env.add(n.name, n)
 
-	def visit(self, n:Variable, env:Symtab):
+	def visit(self, n:VariableDeclaration, env:Symtab):
 		# Agregar n.name a la TS actual
 		env.add(n.name, n)
 		if n.value:
@@ -117,7 +120,7 @@ class Checker(Visitor):
 			return check_binop('=', n.type, dtype)
 		
 
-	def visit(self, n:Function, env:Symtab):
+	def visit(self, n:FunctionDefinition, env:Symtab):
 		# Guardar la función en la TS actual
 		env.add(n.name, n)
 
@@ -150,7 +153,7 @@ class Checker(Visitor):
 		# Los literales primitivos basicos ya tienen un tipo definido en la estructura del ast (model.py)
 		return n.type
 
-	def visit(self, n:BinOp, env:Symtab):
+	def visit(self, n:BinaryOperation, env:Symtab):
 		# visitar n.left y luego n.right
 		left_type = n.left.accept(self, env)
 		right_type = n.right.accept(self, env)
@@ -158,7 +161,7 @@ class Checker(Visitor):
 		# Verificar si son tipos compatibles
 		return check_binop(n.opr, left_type, right_type)
 		
-	def visit(self, n:UnaryOp, env:Symtab):
+	def visit(self, n:UnaryOperation, env:Symtab):
 		'''
 		1. visitar n.expr
 		2. validar si es un operador unario valido
@@ -166,7 +169,7 @@ class Checker(Visitor):
 		type1 = n.expr.accept(self, env)
 		return check_unaryop(n.opr, type1)
 
-	def visit(self, n:TypeCast, env:Symtab):
+	def visit(self, n:TypeConversion, env:Symtab):
 		# Visitar n.expr para validar
 		n.expr.accept(self, env)
 

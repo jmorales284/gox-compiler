@@ -1,21 +1,47 @@
+class Visitor:
+    def visit(self,node,env):
+        method_name = 'visit_' + node.__class__.__name__
+        visitor = getattr(self, method_name, self.generic_visit)
+        return visitor(node, env)
+    
+def generic_visit(self, node, env):
+    raise Exception(f'No visit_{node.__class__.__name__} method')
 
 
 class Node:
-    def __init__(self, type, value=None):
-        self.type = type
+    def __init__(self, node_type, value=None):
+        self.node_type = node_type
         self.value = value
         self.children = []
 
     def add_child(self, node):
         self.children.append(node)
 
+    def accept(self, visitor, env):
+        return visitor.visit(self, env)
+
     def __repr__(self):
-        return f"Node({self.type}, {self.value}, children={self.children})"
+        return f"Node({self.node_type}, {repr(self.value)}, children={self.children})"
 
 
+class Program(Node):
+    def __init__(self, stmts):
+        """
+        Nodo raíz del AST que representa un programa completo.
+        :param stmts: Lista de sentencias o declaraciones del programa.
+        """
+        super().__init__("Program")
+        self.stmts = stmts  # Lista de sentencias o declaraciones
+        for stmt in stmts:
+            self.add_child(stmt)
 
+    def __repr__(self):
+        return f"Program(statements={self.stmts})"
+    
+    def __len__(self):
+        return len(self.stmts)
 
-
+    
 class Assignment:
     def __init__(self, location, expression):
         self.location = location  # Identificador de la variable
@@ -252,6 +278,8 @@ class PrimitiveAssignmentLocation(Node):
     
     def __repr__(self):
         return f'PrimitiveAssignmentLocation({self.name}), {self.expression}'
+    
+
 
 class PrimitiveReadLocation(Node):
     """
