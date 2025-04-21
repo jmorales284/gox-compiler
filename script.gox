@@ -1,0 +1,43 @@
+/* ****************************************************************** *
+ *                                                                    *
+ * stript.gox                                                         *
+ *                                                                    *
+ * Un programa de prueba para el lenguaje de programación GoX.        *
+ *                                                                    *
+ * ****************************************************************** *
+ */
+
+
+// Declaración de variables
+var x int;
+x = 5;
+
+const PI = 3.1415;
+
+
+var y int = 3;
+var z float = 2.5;
+
+var result int = (x + y) * z;
+
+if (result > 20) {
+    var bonus int = 10;
+    result = result + bonus;
+}
+
+while (result > 0) {
+    result = result - 1;
+}
+
+var final float = result / 2.0;
+
+print final;
+
+func fib(n int) int {
+    if n <= 1 {
+        return 1;
+    }
+    return fin(n-1) + fib(n-2);
+}
+print fib(10);
+// Fin del programa

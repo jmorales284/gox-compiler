@@ -73,8 +73,8 @@ class Parser:
         self.consume("SEMI", "Se esperaba ';' después de la expresión")
 
         if name_token.value.startswith("`"):
-            return MemoryAssignmentLocation(name_token.value[1:], expr)
-        return PrimitiveAssignmentLocation(name_token.value, expr)
+            return MemoryAssignmentLocation(name_token.value[1:], expr, lineno=name_token.lineno)
+        return PrimitiveAssignmentLocation(name_token.value, expr, lineno=name_token.lineno)
 
 
 
@@ -116,6 +116,7 @@ class Parser:
             var_type=var_type,  # Ahora incluye el tipo si fue especificado
             value=value,
             is_constant=is_constant
+            lineno = name_token.lineno
         )
 
 
@@ -156,6 +157,7 @@ class Parser:
             parameters=params,
             return_type=return_type,
             body=body
+            lineno=name_token.lineno
         )
 
     def if_stmt(self) -> Conditional:
@@ -176,7 +178,7 @@ class Parser:
             if self.match("ELSE"):
                 false_branch = [self.statement()]
                 
-            return Conditional(condition, true_branch, false_branch)
+            return Conditional(condition, true_branch, false_branch, lineno=condition.lineno)
         
         # 3. Cuerpo del if con llaves
         true_branch = []
@@ -194,7 +196,7 @@ class Parser:
                 while not self.match("RBRACE"):
                     false_branch.append(self.statement())
         
-        return Conditional(condition, true_branch, false_branch)
+        return Conditional(condition, true_branch, false_branch, lineno=condition.lineno)
 
     def while_stmt(self) -> WhileLoop:
         self.consume("WHILE", "Se esperaba 'while'")
@@ -205,7 +207,7 @@ class Parser:
         while not self.match("RBRACE"):
             body.append(self.statement())
 
-        return WhileLoop(condition, body)
+        return WhileLoop(condition, body, lineno=condition.lineno)
 
     def return_stmt(self) -> Return:
         self.consume("RETURN", "Se esperaba 'return'")
@@ -215,13 +217,13 @@ class Parser:
         
         expr = self.expression()
         self.consume("SEMI", "Se esperaba ';' después de return")
-        return Return(expr)
+        return Return(expr, lineno=expr.lineno)
 
     def print_stmt(self) -> Print:
         self.consume("PRINT", "Se esperaba 'print'")
         expr = self.expression()
         self.consume("SEMI", "Se esperaba ';' después de print")
-        return Print(expr)
+        return Print(expr, lineno=expr.lineno)
     
 
 
@@ -294,11 +296,11 @@ class Parser:
                 args = self.parameters() if not self.match("RPAREN") else []
                 if not self.tokens[self.current - 1].type == "RPAREN":
                     self.consume("RPAREN", "Se esperaba ')'")
-                return FunctionCall(id_name, args)
+                return FunctionCall(id_name, args, lineno=self.tokens[self.current - 1].lineno)
             else:
                 if id_name.startswith("`"):
-                    return MemoryReadLocation(id_name[1:])
-                return PrimitiveReadLocation(id_name)
+                    return MemoryReadLocation(id_name[1:], lineno=self.tokens[self.current - 1].lineno)
+                return PrimitiveReadLocation(id_name, lineno=self.tokens[self.current - 1].lineno)
         
         else:
             raise SyntaxError(f"Línea {self.peek().lineno}: Factor inesperado '{self.peek().value}'")
@@ -317,7 +319,7 @@ class Parser:
                 right = next_rule()
                 if not right:
                     raise SyntaxError(f"Línea {self.peek().lineno}: Falta expresión después del operador '{op}'")
-                left = BinaryOperation(left, op, right)
+                left = BinaryOperation(left, op, right, lineno=left.lineno)
             return left
         except Exception as e:
             raise SyntaxError(f"Línea {self.peek().lineno if self.peek() else '?'}: Error en operación binaria: {str(e)}")
@@ -346,7 +348,7 @@ class Parser:
         left = self.andterm()
         while self.match("OR"):
             right = self.andterm()
-            left = BinaryOperation(left, "OR", right)
+            left = BinaryOperation(left, "OR", right, lineno=left.lineno)
         return left
 
     def andterm(self) -> Node:
@@ -354,7 +356,7 @@ class Parser:
         left = self.relterm()
         while self.match("AND"):
             right = self.relterm()
-            left = BinaryOperation(left, "AND", right)
+            left = BinaryOperation(left, "AND", right, lineno=left.lineno)
         return left
 
     def relterm(self) -> Node:
@@ -363,7 +365,7 @@ class Parser:
         while self.peek() and self.peek().type in ('LT', 'GT', 'LE', 'GE', 'EQ', 'NE'):
             op = self.advance().type
             right = self.addterm()
-            left = BinaryOperation(left, op, right)
+            left = BinaryOperation(left, op, right, lineno=left.lineno)
         return left
 
     def addterm(self) -> Node:
@@ -372,7 +374,7 @@ class Parser:
         while self.peek() and self.peek().type in ('PLUS', 'MINUS'):
             op = self.advance().type
             right = self.term()
-            left = BinaryOperation(left, op, right)
+            left = BinaryOperation(left, op, right, lineno=left.lineno)
         return left
     
     def term(self) -> Node:
@@ -381,7 +383,7 @@ class Parser:
         while self.peek() and self.peek().type in ('TIMES', 'DIVIDE', 'MODULO'):
             op = self.advance().type
             right = self.factor()
-            left = BinaryOperation(left, op, right)
+            left = BinaryOperation(left, op, right, lineno=left.lineno)
         return left
 
 
