@@ -1,3 +1,24 @@
+"""
+Este archivo define el modelo del Árbol de Sintaxis Abstracta (AST) para el compilador GOX.
+
+Cada clase en este archivo representa un tipo de nodo en el AST, como declaraciones de variables, 
+funciones, estructuras de control (if, while), operaciones binarias, y más. 
+
+El modelo utiliza un patrón de visitante (Visitor Pattern) para permitir que diferentes componentes 
+del compilador (como el analizador semántico) recorran y procesen el AST de manera uniforme.
+
+Clases principales:
+- Node: Clase base para todos los nodos del AST.
+- Program: Nodo raíz que representa el programa completo.
+- VariableDeclaration, FunctionDefinition: Representan declaraciones de variables y funciones.
+- WhileLoop, Conditional: Representan estructuras de control.
+- BinaryOperation, UnaryOperation: Representan operaciones aritméticas y lógicas.
+- Otros nodos específicos como Return, Break, Continue, y más.
+
+Cada nodo incluye información relevante como el tipo de nodo, sus hijos, y la línea del código fuente 
+donde se encuentra, para facilitar la generación de errores y el análisis semántico.
+"""
+
 class Visitor:
     def visit(self,node,env):
         method_name = 'visit_' + node.__class__.__name__
@@ -9,10 +30,11 @@ def generic_visit(self, node, env):
 
 
 class Node:
-    def __init__(self, node_type, value=None):
+    def __init__(self, node_type, value=None,lineno=None):
         self.node_type = node_type
         self.value = value
         self.children = []
+        self.lineno = lineno
 
     def add_child(self, node):
         self.children.append(node)
@@ -55,8 +77,8 @@ class Assignment:
 
 
 class Print(Node):
-    def __init__(self, expression):
-        super().__init__("Print")
+    def __init__(self, expression, lineno=None):
+        super().__init__("Print", lineno=lineno)  # Llama al constructor de Node con el tipo "Print"
         self.add_child(Node("Expression", expression))  # Agregamos la expresión como nodo hijo
     
     def __repr__(self):
@@ -66,8 +88,8 @@ class Print(Node):
 
 
 class Conditional(Node):
-    def __init__(self, condition, true_branch, false_branch=None):
-        super().__init__("Conditional")  # Tipo de nodo: "Conditional"
+    def __init__(self, condition, true_branch, false_branch=None, lineno=None):
+        super().__init__("Conditional",lineno=lineno)  # Tipo de nodo: "Conditional"
         self.add_child(Node("Condition", condition))  # Nodo hijo que representa la condición
         self.add_child(Node("True", true_branch))  # Nodo hijo para la rama verdadera
         if false_branch:
@@ -82,8 +104,8 @@ class Conditional(Node):
 
 
 class WhileLoop(Node):
-    def __init__(self, condition, body):
-        super().__init__("While")  # Llama al constructor de Node con el tipo "While"
+    def __init__(self, condition, body, lineno=None):
+        super().__init__("While",lineno=lineno)  # Llama al constructor de Node con el tipo "While"
         self.condition = condition  # Expresión que se evalúa en cada iteración
         self.body = body  # Bloque de código que se ejecuta dentro del while
 
@@ -93,24 +115,24 @@ class WhileLoop(Node):
 
 
 class Break(Node):
-    def __init__(self):
-        super().__init__("Break")
+    def __init__(self,lineno=None):
+        super().__init__("Break",lineno=lineno)  # Llama al constructor de Node con el tipo "Break"
 
     def __repr__(self):
         return "Break()"
 
 
 class Continue(Node):
-    def __init__(self):
-        super().__init__("Continue")
+    def __init__(self, lineno=None):
+        super().__init__("Continue",lineno=lineno)  # Llama al constructor de Node con el tipo "Continue"
 
     def __repr__(self):
         return "Continue()"
 
 
 class Return(Node):
-    def __init__(self, expression):
-        super().__init__("Return")
+    def __init__(self, expression,lineno=None):
+        super().__init__("Return",lineno=lineno)  # Llama al constructor de Node con el tipo "Return"
         self.expression = Node("Expression", expression)  # Crear nodo hijo para la expresión
         self.add_child(self.expression)  # Agregarlo al árbol
 
@@ -123,8 +145,8 @@ class Return(Node):
 
 
 class VariableDeclaration(Node):
-    def __init__(self, name, var_type=None, value=None, is_constant=False):
-        super().__init__("VariableDeclaration")
+    def __init__(self, name, var_type=None, value=None, is_constant=False, lineno=None):
+        super().__init__("VariableDeclaration", lineno=lineno)  # Llama al constructor de Node con el tipo "VariableDeclaration"
         self.name = name  # Nombre de la variable
         self.var_type = var_type  # Tipo de la variable (opcional si se infiere)
         self.value = value  # Valor de la variable (opcional)
@@ -143,8 +165,8 @@ class VariableDeclaration(Node):
 
 
 class FunctionDefinition(Node):
-    def __init__(self, name, parameters, return_type, body):
-        super().__init__("FunctionDefinition")
+    def __init__(self, name, parameters, return_type, body,lineno=None):
+        super().__init__("FunctionDefinition", lineno=lineno)  # Llama al constructor de Node con el tipo "FunctionDefinition"
         self.name = name
         self.parameters = parameters  # Lista de parámetros (nombre, tipo)
         self.return_type = return_type
@@ -168,8 +190,8 @@ class FunctionDefinition(Node):
 
 
 class FunctionImport(Node):
-    def __init__(self, name, parameters, return_type):
-        super().__init__("FunctionImport")
+    def __init__(self, name, parameters, return_type,lineno=None):
+        super().__init__("FunctionImport", lineno=lineno)  # Llama al constructor de Node con el tipo "FunctionImport"
         self.name = name
         self.parameters = parameters
         self.return_type = return_type
@@ -210,8 +232,8 @@ class Literal(Node):
 
 
 class BinaryOperation(Node):
-    def __init__(self, left, operator, right):
-        super().__init__("BinaryOperation")
+    def __init__(self, left, operator, right,lineno=None):
+        super().__init__("BinaryOperation", lineno=lineno)  # Llama al constructor de Node con el tipo "BinaryOperation"
         self.left = left  # Operando izquierdo
         self.operator = operator  # Operador (+, -, *, /, <, >, etc.)
         self.right = right  # Operando derecho
@@ -252,8 +274,8 @@ class TypeConversion(Node):
 
 
 class FunctionCall(Node):
-    def __init__(self, name, arguments):
-        super().__init__("FunctionCall")
+    def __init__(self, name, arguments,lineno=None):
+        super().__init__("FunctionCall",lineno=lineno)  # Llama al constructor de Node con el tipo "FunctionCall"
         self.name = name  # Nombre de la función
         self.arguments = arguments  # Lista de argumentos
 
@@ -272,8 +294,8 @@ class PrimitiveAssignmentLocation(Node):
         name (str): Nombre de la variable.
         expression: Expresión que se asigna a la variable.
     """
-    def __init__(self, name, expression):
-        super().__init__("PrimitiveAssignmentLocation")
+    def __init__(self, name, expression,lineno=None):
+        super().__init__("PrimitiveAssignmentLocation", lineno=lineno)  # Llama al constructor de Node con el tipo "PrimitiveAssignmentLocation"
         self.name = name
         self.expression = expression
     
@@ -292,8 +314,8 @@ class PrimitiveReadLocation(Node):
     Atributos:
         name (str): Nombre de la variable que se lee.
     """
-    def __init__(self, name):
-        super().__init__("PrimitiveReadLocation")
+    def __init__(self, name, lineno=None):
+        super().__init__("PrimitiveReadLocation", lineno=lineno)  # Llama al constructor de Node con el tipo "PrimitiveReadLocation"
         self.name = name
     
     def __repr__(self):

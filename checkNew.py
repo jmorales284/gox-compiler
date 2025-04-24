@@ -26,11 +26,9 @@ class Checker(Visitor):
         Verifica el nodo raíz del programa.
         Recorre cada sentencia en el programa y las verifica.
         '''
-        print("Verificando el nodo raíz del programa")
         for stmt in node.stmts:
             stmt.accept(self, env)
         env.print()
-        print("Verificación del programa completada")
         print("___________________________________")
 
     def visit_VariableDeclaration(self, node: VariableDeclaration, env: Symtab):
@@ -41,7 +39,7 @@ class Checker(Visitor):
         3. Agrega la variable a la tabla de símbolos.
         '''
         if env.get(node.name):
-            error(f"Error: La variable '{node.name}' ya está definida.")
+            error(f"Error: La variable '{node.name}' ya está definida.",node.lineno)
             return
 
         # Si hay valor inicial, verificar su tipo
@@ -49,7 +47,7 @@ class Checker(Visitor):
             var_decl_type = node.var_type
             value_type = node.value.accept(self, env)
             if var_decl_type != value_type:
-                error(f"Error: Tipo de variable '{node.name}' no coincide con el tipo de valor inicial.")
+                error(f"Error: Tipo de variable '{node.name}' no coincide con el tipo de valor inicial.",node.lineno)
 
         # Registrar variable en el entorno actual
         env.add(node.name, node)
@@ -66,12 +64,12 @@ class Checker(Visitor):
         '''
         # Verifica si la función ya está definida
         if env.get(node.name):
-            error(f"Error: La función '{node.name}' ya está definida.")
+            error(f"Error: La función '{node.name}' ya está definida.",node.lineno)
             return
 
         # Verificar si ya estamos dentro de una función
         if env.get('$func'):
-            error(f"Error: las funciones anidadas no están permitidas.")
+            error(f"Error: las funciones anidadas no están permitidas.",node.lineno)
             return
 
         env.add(node.name, node)
@@ -96,7 +94,7 @@ class Checker(Visitor):
 
         # Verificar si la función tiene un tipo de retorno diferente de void
         if node.return_type != 'VOID' and not has_return:
-            error(f"Error: La función '{node.name}' debe tener un 'return' para el tipo de retorno '{node.return_type}'.")
+            error(f"Error: La función '{node.name}' debe tener un 'return' para el tipo de retorno '{node.return_type}'.",node.lineno)
         
         
 
@@ -105,7 +103,7 @@ class Checker(Visitor):
         Registra una función importada (declaración externa) en la tabla de símbolos.
         '''
         if env.get(node.name):
-            error(f"Error: La función '{node.name}' ya está definida.")
+            error(f"Error: La función '{node.name}' ya está definida.",node.lineno)
             return
 
         env.add(node.name, node)
@@ -127,7 +125,7 @@ class Checker(Visitor):
         '''
         symbol = env.get(node.name)
         if not symbol:
-            error(f"La variable '{node.name}' no está declarada.")
+            error(f"La variable '{node.name}' no está declarada.",node.lineno)
             return 'error'
         return_type = None
         if isinstance(symbol, Parameter):
@@ -146,7 +144,7 @@ class Checker(Visitor):
         right_type = node.right.accept(self, env)
         result_type = check_binop(node.operator, left_type, right_type)
         if result_type == 'error' or result_type is None:
-            error(f"Error en operación binaria: tipos incompatibles '{left_type}' {node.operator} '{right_type}'")
+            error(f"Error en operación binaria: tipos incompatibles '{left_type}' {node.operator} '{right_type}'",node.lineno)
         return result_type
 
     def visit_UnaryOperation(self, node: UnaryOperation, env: Symtab):
@@ -167,11 +165,11 @@ class Checker(Visitor):
         '''
         func = env.get(node.name)
         if not func:
-            error(f"Error: La función '{node.name}' no está declarada.")
+            error(f"Error: La función '{node.name}' no está declarada.",node.lineno)
             return 'error'
 
         if len(func.parameters) != len(node.arguments):
-            error(f"Error: Número incorrecto de argumentos para función '{node.name}'.")
+            error(f"Error: Número incorrecto de argumentos para función '{node.name}'.",node.lineno)
             return 'error'
         
         #Visitar argumentos(si están definidos) y verificar que cada argumento sea compatible con cada parámetro de la función
@@ -215,11 +213,11 @@ class Checker(Visitor):
         '''
         symbol = env.get(node.name)
         if not symbol:
-            error(f"Error: La variable '{node.name}' no está definida.")
+            error(f"Error: La variable '{node.name}' no está definida.",node.lineno)
             return
 
         if hasattr(symbol,'is_constant') and symbol.is_constant:
-            error(f"Error: La variable '{node.name}' es constante y no se puede modificar.")
+            error(f"Error: La variable '{node.name}' es constante y no se puede modificar.",node.lineno)
             return
         
         expr_type = node.expression.accept(self, env)
@@ -230,7 +228,7 @@ class Checker(Visitor):
             declared_type = symbol.var_type
 
         if declared_type != expr_type:
-            error(f"Error: Tipo incompatible en asignación a '{node.name}'. Esperado {declared_type}, recibido {expr_type}.")
+            error(f"Error: Tipo incompatible en asignación a '{node.name}'. Esperado {declared_type}, recibido {expr_type}.",node.lineno)
 
     # ----------------------
     # NODOS DE CONTROL
@@ -246,7 +244,7 @@ class Checker(Visitor):
         # Verifica el tipo de la condición
         condition_type = node.children[0].value.accept(self, env)
         if condition_type != 'bool':
-            error(f"Error: La condición debe ser de tipo booleano, pero se encontró '{condition_type}'.")
+            error(f"Error: La condición debe ser de tipo booleano, pero se encontró '{condition_type}'.",node.lineno)
 
         
         # Verifica el bloque "then"
@@ -269,7 +267,7 @@ class Checker(Visitor):
         # Verifica la condición
         condition_type = node.condition.accept(self, env)
         if condition_type != 'bool':
-            error(f"Error: La condición del bucle while debe ser de tipo booleano, pero se encontró '{condition_type}'.")
+            error(f"Error: La condición del bucle while debe ser de tipo booleano, pero se encontró '{condition_type}'.",node.lineno)
         
 
         # Verifica el cuerpo del bucle si hay un break o continue
@@ -289,7 +287,7 @@ class Checker(Visitor):
         Si no está dentro de un bucle, lanza un error.
         '''
         if not env.get('$loop'):
-            error(f"Error: 'break' fuera de un bucle while.")
+            error(f"Error: 'break' fuera de un bucle while.",node.lineno)
             return
         # Si está dentro de un bucle, no se necesita hacer nada
         # ya que el break es válido.
@@ -301,7 +299,7 @@ class Checker(Visitor):
         Si no está dentro de un bucle, lanza un error.
         '''
         if not env.get('$loop'):
-            error(f"Error: 'continue' fuera de un bucle while.")
+            error(f"Error: 'continue' fuera de un bucle while.",node.lineno)
             return
         pass
 
@@ -313,13 +311,13 @@ class Checker(Visitor):
         '''
         func = env.get('$func')
         if not env.get('$func'):
-            error(f"Error: 'return' fuera de una función.")
+            error(f"Error: 'return' fuera de una función.",node.lineno)
             return
         if node.expression:
             return_type=node.expression.value.accept(self, env)
             func_type = func.return_type
             if return_type != func_type:
-                error(f"Error: Tipo de retorno '{return_type}' no coincide con el tipo de la función '{func.name}' que es '{func_type}'.")
+                error(f"Error: Tipo de retorno '{return_type}' no coincide con el tipo de la función '{func.name}' que es '{func_type}'.",node.lineno)
 
     def visit_Print(self, node: Print, env: Symtab):
         '''

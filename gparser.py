@@ -1,3 +1,33 @@
+"""
+Este archivo implementa el analizador sintáctico (Parser) para el compilador GOX.
+
+El analizador sintáctico convierte una lista de tokens generada por el analizador léxico en un Árbol 
+de Sintaxis Abstracta (AST). Este AST representa la estructura jerárquica del programa y es utilizado 
+por el analizador semántico para realizar verificaciones adicionales.
+
+Características principales:
+- Soporta declaraciones de variables, funciones, y estructuras de control (`if`, `while`, etc.).
+- Reconoce expresiones aritméticas, lógicas y llamadas a funciones.
+- Genera nodos AST con información sobre el tipo de construcción y la línea del código fuente.
+- Detecta errores de sintaxis y proporciona mensajes claros con el número de línea.
+
+Clases y métodos principales:
+- `Parser`: Clase principal que implementa el proceso de análisis sintáctico.
+  - `parse()`: Punto de entrada para generar el AST a partir de los tokens.
+  - `statement()`: Analiza declaraciones y sentencias como asignaciones, ciclos y condicionales.
+  - `expression()`: Analiza expresiones aritméticas y lógicas.
+  - `funcdecl()`: Analiza declaraciones de funciones.
+  - `vardecl()`: Analiza declaraciones de variables.
+  - `if_stmt()` y `while_stmt()`: Analizan estructuras de control.
+  - `factor()`: Analiza los elementos básicos de una expresión (literales, variables, llamadas a funciones).
+
+El parser utiliza un enfoque recursivo-descendente para construir el AST y maneja errores de sintaxis 
+de manera robusta, proporcionando mensajes claros al usuario.
+
+El analizador sintáctico es la segunda etapa del compilador y prepara el AST para el análisis semántico.
+"""
+
+
 from typing import List
 from dataclasses import dataclass
 from glexer import Lexer
@@ -6,6 +36,8 @@ from rich import print_json
 
 import json
 import os
+
+
 
 @dataclass
 class Token:
@@ -74,7 +106,7 @@ class Parser:
                     args = self.arguments()
                     self.consume("RPAREN", "Se esperaba ')' después de los argumentos")
                     self.consume("SEMI", "Se esperaba ';' después de la llamada")
-                    return FunctionCall(name_token.value, args)
+                    return FunctionCall(name_token.value, args,lineno=self.get_lineno())
                 else:
                     # Si no es llamada a función, retrocedemos
                     self.current = current_pos
@@ -91,11 +123,11 @@ class Parser:
             elif self.peek().type == "break":
                 self.advance()
                 self.consume("SEMI", "Se esperaba ';' después de break")
-                return Break()
+                return Break(lineno=self.get_lineno())
             elif self.peek().type == "continue":
                 self.advance()
                 self.consume("SEMI", "Se esperaba ';' después de continue")
-                return Continue()
+                return Continue(lineno=self.get_lineno())
             elif self.peek().type == "return":
                 return self.return_stmt()
             elif self.peek().type == "print":
@@ -141,7 +173,7 @@ class Parser:
 
         if name_token.value.startswith("`"):
             return MemoryAssignmentLocation(name_token.value[1:], expr)
-        return PrimitiveAssignmentLocation(name_token.value, expr)
+        return PrimitiveAssignmentLocation(name_token.value, expr,lineno=self.get_lineno())
 
 
 
@@ -184,7 +216,8 @@ class Parser:
             name=name_token.value,
             var_type=var_type,  # Ahora incluye el tipo si fue especificado
             value=value,
-            is_constant=is_constant
+            is_constant=is_constant,
+            lineno=name_token.lineno  # Agregar número de línea
         )
 
         return declaration
@@ -210,11 +243,13 @@ class Parser:
             name=name_token.value,
             parameters=params,
             return_type=return_type,
-            body=body
+            body=body,
+            lineno=name_token.lineno  # Agregar número de línea
         )
 
     def if_stmt(self) -> Conditional:
         self.consume("if", "Se esperaba 'if'")
+        old_lineno = self.get_lineno()
         
         # 1. Parsear la condición
         condition = self.expression()
@@ -231,7 +266,7 @@ class Parser:
             if self.match("else"):
                 false_branch = [self.statement()]
                 
-            return Conditional(condition, true_branch, false_branch)
+            return Conditional(condition, true_branch, false_branch,lineno=self.old_lineno)
         
         # 3. Cuerpo del if con llaves
         true_branch = []
@@ -249,28 +284,29 @@ class Parser:
                 while not self.match("RBRACE"):
                     false_branch.append(self.statement())
         
-        return Conditional(condition, true_branch, false_branch)
+        return Conditional(condition, true_branch, false_branch,lineno=old_lineno)
 
     def while_stmt(self) -> WhileLoop:
         self.consume("while", "Se esperaba 'while'")
         condition = self.expression()
+        old_lineno = self.get_lineno()
         self.consume("LBRACE", "Se esperaba '{' después de while")
         
         body = []
         while not self.match("RBRACE"):
             body.append(self.statement())
 
-        return WhileLoop(condition, body)
+        return WhileLoop(condition, body,old_lineno)
 
     def return_stmt(self) -> Return:
         self.consume("return", "Se esperaba 'return'")
         
         if self.match("SEMI"):
-            return Return(None)
+            return Return(None, lineno=self.get_lineno())
         
         expr = self.expression()
         self.consume("SEMI", "Se esperaba ';' después de return")
-        return Return(expr)
+        return Return(expr,lineno=self.get_lineno())
 
     def print_stmt(self) -> Print:
         self.consume("print", "Se esperaba 'print'")
@@ -334,11 +370,11 @@ class Parser:
                     while self.match("COMMA"):  # Mientras haya comas
                         args.append(self.expression())  # Parsear siguiente argumento
                     self.consume("RPAREN", "Se esperaba ')' después de los argumentos")
-                return FunctionCall(id_name, args)
+                return FunctionCall(id_name, args,lineno=self.get_lineno())
             else:
                 if id_name.startswith("`"):
                     return MemoryReadLocation(id_name[1:])
-                return PrimitiveReadLocation(id_name)
+                return PrimitiveReadLocation(id_name, lineno=self.tokens[self.current - 1].lineno)
         
         else:
             raise SyntaxError(f"Línea {self.peek().lineno}: Factor inesperado '{self.peek().value}'")
@@ -355,7 +391,7 @@ class Parser:
                 right = next_rule()
                 if not right:
                     raise SyntaxError(f"Línea {self.peek().lineno}: Falta expresión después del operador '{op}'")
-                left = BinaryOperation(left, op, right)
+                left = BinaryOperation(left, op, right,lineno=self.get_lineno())
             return left
         except Exception as e:
             raise SyntaxError(f"Línea {self.peek().lineno if self.peek() else '?'}: Error en operación binaria: {str(e)}")
@@ -373,7 +409,7 @@ class Parser:
         while self.peek() and self.peek().type == 'OR':
             op = self.advance().type  # Consumimos el operador
             right = self.orterm()     # Parseamos el siguiente orterm
-            left = BinaryOperation(left, op, right)  # Construimos el nodo
+            left = BinaryOperation(left, op, right,lineno=self.get_lineno())  # Construimos el nodo
         
         return left
     
@@ -384,7 +420,7 @@ class Parser:
         left = self.andterm()
         while self.match("OR"):
             right = self.andterm()
-            left = BinaryOperation(left, "OR", right)
+            left = BinaryOperation(left, "OR", right,lineno=self.get_lineno())
         return left
 
     def andterm(self) -> Node:
@@ -392,7 +428,7 @@ class Parser:
         left = self.relterm()
         while self.match("AND"):
             right = self.relterm()
-            left = BinaryOperation(left, "AND", right)
+            left = BinaryOperation(left, "AND", right,lineno=self.get_lineno())
         return left
 
     def relterm(self) -> Node:
@@ -401,7 +437,7 @@ class Parser:
         while self.peek() and self.peek().type in ('LT', 'GT', 'LE', 'GE', 'EQ', 'NE'):
             op = self.advance().type
             right = self.addterm()
-            left = BinaryOperation(left, op, right)
+            left = BinaryOperation(left, op, right,lineno=self.get_lineno())
         return left
 
     def addterm(self) -> Node:
@@ -410,7 +446,7 @@ class Parser:
         while self.peek() and self.peek().type in ('PLUS', 'MINUS'):
             op = self.advance().type
             right = self.term()
-            left = BinaryOperation(left, op, right)
+            left = BinaryOperation(left, op, right,lineno=self.get_lineno())
         return left
     
     def term(self) -> Node:
@@ -419,7 +455,7 @@ class Parser:
         while self.peek() and self.peek().type in ('TIMES', 'DIVIDE', 'MODULO'):
             op = self.advance().type
             right = self.factor()
-            left = BinaryOperation(left, op, right)
+            left = BinaryOperation(left, op, right,lineno=self.get_lineno())
         return left
 
 
@@ -483,6 +519,9 @@ class Parser:
         if self.match(token_type):
             return self.tokens[self.current - 1]
         raise SyntaxError(f"Línea {self.peek().lineno}: {message}")
+
+    def get_lineno(self) -> int:
+        return self.tokens[self.current - 1].lineno if self.current > 0 else -1
 
 
 

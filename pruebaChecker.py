@@ -16,20 +16,20 @@ with open(SOURCE_FILE, "r", encoding="utf-8") as f:
 
 lexer = Lexer(source_code)
 tokens = list(lexer.tokenize())
-for token in tokens:
-    print(f"{token.type}: {token.value} Línea {token.lineno}")
+# for token in tokens:
+#     print(f"{token.type}: {token.value} Línea {token.lineno}")
 # 3. Parsear
 parser = Parser(tokens)
 ast = parser.parse()
 
 
-# 6. Feedback al usuario
-print(f"✓ Análisis completado: {len(tokens)} tokens procesados")
-
+print(f"**** Análisis completado: {len(tokens)} tokens procesados")
 print("AST generado:")
 print(ast)
 print("___________________________________")
 
-# Un programa con solo una declaración de variable y una asignación
-program = ast
-Checker.check(program)
+# 4. Análisis semántico
+print("**** Iniciando análisis semántico")
+Checker.check(ast)
+
+print("**** Análisis semántico completado")
