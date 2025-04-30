@@ -179,7 +179,7 @@ class Checker(Visitor):
             arg_type = arg.accept(self, env)
             param_type = param.type
             if param_type != arg_type:
-                error(f"Error: Tipo de argumento '{arg.name}' no coincide con el tipo de parámetro '{param.name}'. Esperado {param_type}, recibido {arg_type}.")
+                error(f"Error: Tipo de argumento '{arg.name}' no coincide con el tipo de parámetro '{param.name}'. Esperado {param_type}, recibido {arg_type}.",node.lineno)
 
         return func.return_type
 
