@@ -211,6 +211,7 @@ class Parser:
                 f"Se esperaba ';' pero se encontró '{current_token.value if current_token else 'EOF'}'"
             ) from e
         
+
         
         declaration=VariableDeclaration(
             name=name_token.value,
@@ -220,7 +221,11 @@ class Parser:
             lineno=name_token.lineno  # Agregar número de línea
         )
 
+
         return declaration
+    
+
+
 
 
 
@@ -328,7 +333,7 @@ class Parser:
         elif self.match("FLOAT"):
             return Literal('float',self.tokens[self.current - 1].value)
         
-        elif self.match("CHAR_LITERAL"):
+        elif self.match("CHAR"):
             char_value = self.tokens[self.current - 1].value
             processed_char = char_value[1:-1].encode().decode('unicode_escape')
             return Literal('char',processed_char)
@@ -344,7 +349,7 @@ class Parser:
         elif self.match("BOOLEAN"):
             return Literal('bool',self.tokens[self.current - 1].value.lower())
         
-        elif self.match("PLUS") or self.match("MINUS") or self.match("GROW"):
+        elif self.match("PLUS") or self.match("MINUS") or self.match("CARET") or self.match("NOT"):
             op = self.tokens[self.current - 1].type
             return UnaryOperation(op, self.factor())
         
@@ -418,17 +423,17 @@ class Parser:
     def orterm(self) -> Node:
         
         left = self.andterm()
-        while self.match("OR"):
+        while self.match("LOR"):
             right = self.andterm()
-            left = BinaryOperation(left, "OR", right,lineno=self.get_lineno())
+            left = BinaryOperation(left, "LOR", right,lineno=self.get_lineno())
         return left
 
     def andterm(self) -> Node:
         
         left = self.relterm()
-        while self.match("AND"):
+        while self.match("LAND"):
             right = self.relterm()
-            left = BinaryOperation(left, "AND", right,lineno=self.get_lineno())
+            left = BinaryOperation(left, "LAND", right,lineno=self.get_lineno())
         return left
 
     def relterm(self) -> Node:

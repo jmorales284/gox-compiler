@@ -5,7 +5,7 @@
 
 /* Integer operations */
 
-const a = 1;          // Integer constant
+const a int = 1;          // Integer constant
 var b int = 2;        // Integer variable declaration (with value)
 var c int;            // Integer declaration (no value)
 
