@@ -1,4 +1,4 @@
-from gmodel import *
+
 from checkNew import Checker
 from glexer import Lexer
 from gparser import Parser
@@ -7,7 +7,7 @@ import os
 os.system('cls' if os.name == 'nt' else 'clear')
 
 # 1. Cargar código fuente
-SOURCE_FILE = "test.gox"  # Nombre del archivo de entrada
+SOURCE_FILE = "brk.gox"  # Nombre del archivo de entrada
 OUTPUT_FILE = "ast_output.json"  # Nombre del archivo de salida
 
 # 2. Leer y tokenizar
