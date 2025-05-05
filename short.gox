@@ -1,0 +1,4 @@
+// Short-circuit evaluation
+
+print true || (1/0 == 0);
+print false && (1/0 == 0);

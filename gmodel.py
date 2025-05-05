@@ -80,7 +80,7 @@ class Print(Node):
     def __init__(self, expression, lineno=None):
         super().__init__("Print", lineno=lineno)  # Llama al constructor de Node con el tipo "Print"
         self.add_child(Node("Expression", expression))  # Agregamos la expresión como nodo hijo
-    
+        self.expression = expression  # Guardamos la expresión para uso posterior
     def __repr__(self):
         return f'Print({self.children[0].value})'  # Tomamos el valor del primer hijo
 
@@ -232,11 +232,14 @@ class Literal(Node):
 
 
 class BinaryOperation(Node):
-    def __init__(self, left, operator, right,lineno=None):
+    def __init__(self, left, operator, right,lineno=None,type=None):
         super().__init__("BinaryOperation", lineno=lineno)  # Llama al constructor de Node con el tipo "BinaryOperation"
         self.left = left  # Operando izquierdo
         self.operator = operator  # Operador (+, -, *, /, <, >, etc.)
         self.right = right  # Operando derecho
+        if isinstance(left, Literal) and isinstance(right, Literal):
+            self.type = left.type if left.type == right.type else None
+
 
     def __repr__(self):
         return f'BinaryOperation({self.left}, "{self.operator}", {self.right})'

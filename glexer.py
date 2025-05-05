@@ -44,18 +44,33 @@ class Lexer:
 
     # Operadores y símbolos de un carácter
     ONE_CHAR = {
-        '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '/': 'DIVIDE', '<': 'LT', '>': 'GT',
-        '=': 'ASSIGN', ';': 'SEMI', '(': 'LPAREN', ')': 'RPAREN', '{': 'LBRACE', '}': 'RBRACE', ',': 'COMMA', '`': 'DEREF'
+        '+': 'PLUS',
+        '-': 'MINUS',
+        '*': 'TIMES',
+        '/': 'DIVIDE',
+        '<': 'LT',
+        '>':'GT',
+        '=': 'ASSIGN',
+        ';': 'SEMI',
+        '(': 'LPAREN',
+        ')': 'RPAREN',
+        '{': 'LBRACE',
+        '}': 'RBRACE',
+        ',': 'COMMA',
+        '`': 'DEREF',
+        '^': 'CARET',
+        '!': 'NOT',
     }
 
     # Expresiones regulares
     NAME_PAT = re.compile(r'[a-zA-Z_][a-zA-Z_0-9]*')
     INTEGER_PAT = re.compile(r'\d+')
     FLOAT_PAT = re.compile(r'\d+\.\d*|\.\d+')
-    CHAR_PAT = re.compile(r"'([^\\]|\\[n'\\x[0-9A-Fa-f]{2}])'")
+    CHAR_PAT = re.compile(r"'(\\[nrt0'\"\\]|[^\\'])'")
     BOOL_PAT = re.compile(r'\b(true|false)\b')
     COMMENT_LINE_PAT = re.compile(r'//.*')
     COMMENT_BLOCK_PAT = re.compile(r'/\*.*?\*/', re.DOTALL)
+    MEMORY_PAT = re.compile(r'`[a-zA-Z_][a-zA-Z0-9_]*|`\([^)]*\)')
 
     def __init__(self, text):
         self.text = text
@@ -98,10 +113,22 @@ class Lexer:
                 self.index += 2
                 continue
 
-     
+            m = self.MEMORY_PAT.match(self.text, self.index)
+            if m:
+                value = m.group(0)
+                self.tokens.append(Token('MEMORY', value, self.lineno))
+                self.index = m.end()
+                continue
+
             if char in self.ONE_CHAR:
                 self.tokens.append(Token(self.ONE_CHAR[char], char, self.lineno))
                 self.index += 1
+                continue
+            
+            m = self.CHAR_PAT.match(self.text, self.index)
+            if m:
+                self.tokens.append(Token('CHAR', m.group(0), self.lineno))
+                self.index = m.end()
                 continue
 
             m = self.NAME_PAT.match(self.text, self.index)
@@ -130,13 +157,6 @@ class Lexer:
                 self.index = m.end()
                 continue
 
-
-
-            m = self.CHAR_PAT.match(self.text, self.index)
-            if m:
-                self.tokens.append(Token('CHAR', m.group(0), self.lineno))
-                self.index = m.end()
-                continue
 
             raise ValueError(f"{self.lineno}: Caracter ilegal '{char}'")
 
