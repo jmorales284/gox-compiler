@@ -195,7 +195,7 @@ generar código posteriormente.
 '''
 from rich   import print
 from typing import List, Union
-
+from typesys import dict_equivalence
 from gmodel  import *
 #from symtab import Symtab # Se puede obviar por ahora
 
@@ -324,7 +324,7 @@ class IRCode(Visitor):
 	}
 
 	@classmethod
-	def gencode(cls, node:List[Statement]):
+	def gencode(cls, node:Program):
 		'''
 		El nodo es el nodo superior del árbol de 
 		modelo/análisis.
@@ -335,7 +335,7 @@ class IRCode(Visitor):
 		
 		module = IRModule()
 		func = IRFunction(module, 'main', [], [], 'I') # Se crea la funcion principal no acepta argumentos y devuelve un entero 
-		for item in node:# Por cada elemento del nodo
+		for item in node.stmts:# Por cada elemento del nodo
 			item.accept(ircode, func)
 		if '_actual_main' in module.functions:
 			func.append(('CALL', '_actual_main'))
@@ -346,80 +346,80 @@ class IRCode(Visitor):
 	
 	# --- Statements
 	
-	def visit(self, n:Assignment, func:IRFunction):
-		n.location.sotre_value = n.expre  # Es una valiable le estamos asignando el valor de la expresion
-		n.location.accept(self, func) # Se le asigna el valor a la variable
-		n.expression.accept(self, func) # Se le asigna el valor a la expresion
-		func.append(('POKEI',)) # Se le asigna el valor a la variable
+	# def visit(self, n:Assignment, func:IRFunction):
+	# 	n.location.sotre_value = n.expre  # Es una valiable le estamos asignando el valor de la expresion
+	# 	n.location.accept(self, func) # Se le asigna el valor a la variable
+	# 	n.expression.accept(self, func) # Se le asigna el valor a la expresion
+	# 	func.append(('POKEI',)) # Se le asigna el valor a la variable
+	
+
+
+	# def visit(self, n:Conditional, func:IRFunction):
+	# 	n.test.accept(self, func) # Se le asigna el valor a la condicion
+	# 	func.append(('IF',))
+	# 	n.consequence.accept(self, func) # Se le asigna el valor a la consecuencia
+	# 	if n.alternative:
+	# 		func.append(('ELSE',))
+	# 		n.alternative.accept(self, func)
+	# 	func.append(('ENDIF',))
+
+	# def visit(self, n:WhileLoop, func:IRFunction):
+	# 	func.append(('LOOP',))
+	# 	n.test.accept(self, func) # Se le asigna el valor a la condicion
+	# 	func.append(('CBREAK',))
+	# 	n.body.accept(self, func) # Se le asigna el valor al cuerpo
+	# 	func.append(('CONTINUE',))
+	# 	func.append(('ENDLOOP',))
 		
 
+	# def visit(self, n:Break, func:IRFunction):
+	# 	func.append(('CONSTI',1))
+	# 	func.append(('CBREAK',))
 
-	def visit(self, n:Conditional, func:IRFunction):
-		n.test.accept(self, func) # Se le asigna el valor a la condicion
-		func.append(('IF',))
-		n.consequence.accept(self, func) # Se le asigna el valor a la consecuencia
-		if n.alternative:
-			func.append(('ELSE',))
-			n.alternative.accept(self, func)
-		func.append(('ENDIF',))
 
-	def visit(self, n:WhileLoop, func:IRFunction):
-		func.append(('LOOP',))
-		n.test.accept(self, func) # Se le asigna el valor a la condicion
-		func.append(('CBREAK',))
-		n.body.accept(self, func) # Se le asigna el valor al cuerpo
-		func.append(('CONTINUE',))
-		func.append(('ENDLOOP',))
+	# def visit(self, n:Continue, func:IRFunction):
+	# 	func.append(('CONTINUE',))
+	# 	pass
+
+	# def visit(self, n:Return, func:IRFunction):
+	# 	if n.expression:
+	# 		n.expression.accept(self, func)
+	# 	func.append(('RET',))
+
+	# # --- Declaration
 		
-
-	def visit(self, n:Break, func:IRFunction):
-		func.append(('CONSTI',1))
-		func.append(('CBREAK',))
-
-
-	def visit(self, n:Continue, func:IRFunction):
-		func.append(('CONTINUE',))
-		pass
-
-	def visit(self, n:Return, func:IRFunction):
-		if n.expression:
-			n.expression.accept(self, func)
-		func.append(('RET',))
-
-	# --- Declaration
+	# def visit(self, n:VariableDeclaration, func:IRFunction):
+	# 	ir_type = _typemap.get(n.var_type, 'I')
+	# 	func.new_local(n.name, ir_type) # Se le asigna el tipo a la variable
+	# 	if n.value:
+	# 		n.value.accept(self, func)
+	# 		func.append(('LOCAL_SET', n.name)) # Se le asigna el valor a la variable
 		
-	def visit(self, n:VariableDeclaration, func:IRFunction):
-		ir_type = _typemap.get(n.var_type, 'I')
-		func.new_local(n.name, ir_type) # Se le asigna el tipo a la variable
-		if n.value:
-			n.value.accept(self, func)
-			func.append(('LOCAL_SET', n.name)) # Se le asigna el valor a la variable
-		
-	def visit(self, n:FunctionDefinition, func:IRFunction):
-		parmtypes = [ _typemap.get(p.type, 'I') for p in n.parameters ]
-		return_type = _typemap.get(n.return_type, 'I')
-		new_func = IRFunction(func.module, n.name, [p.name for p in n.parameters], parmtypes, return_type)
+	# def visit(self, n:FunctionDefinition, func:IRFunction):
+	# 	parmtypes = [ _typemap.get(p.type, 'I') for p in n.parameters ]
+	# 	return_type = _typemap.get(n.return_type, 'I')
+	# 	new_func = IRFunction(func.module, n.name, [p.name for p in n.parameters], parmtypes, return_type)
 
-		for param in n.parameters:
-			new_func.new_local(param.name, _typemap.get(param.type, 'I'))
+	# 	for param in n.parameters:
+	# 		new_func.new_local(param.name, _typemap.get(param.type, 'I'))
 		
-		for stmt in n.body:
-			stmt.accept(self, new_func)
+	# 	for stmt in n.body:
+	# 		stmt.accept(self, new_func)
 
-		if not any(instr[0] == 'RET' for instr in new_func.code):
-			if return_type != 'void':
-				new_func.append(('CONSTI', 0))
-			new_func.append(('RET',))
+	# 	if not any(instr[0] == 'RET' for instr in new_func.code):
+	# 		if return_type != 'void':
+	# 			new_func.append(('CONSTI', 0))
+	# 		new_func.append(('RET',))
 		
 	
-	def visit(self, n: FunctionImport, func: IRFunction):
-		IRFunction(func.module, n.name, [p.name for p in n.parameters],
-                 [_typemap.get(p.type, 'I') for p in n.parameters],
-                 _typemap.get(n.return_type, 'I'), imported=True)
+	# def visit(self, n: FunctionImport, func: IRFunction):
+	# 	IRFunction(func.module, n.name, [p.name for p in n.parameters],
+  #                [_typemap.get(p.type, 'I') for p in n.parameters],
+  #                _typemap.get(n.return_type, 'I'), imported=True)
 		
-	# --- Expressions
+	# # --- Expressions
 	
-	def visit(self, n:Literal, func:IRFunction):
+	def visit_Literal(self, n:Literal, func:IRFunction):
 		if n.type == 'int':
 			func.append(('CONSTI', n.value))
 		elif n.type == 'float':
@@ -429,7 +429,7 @@ class IRCode(Visitor):
 		elif n.type == 'bool':
 			func.append(('CONSTI', int(n.value)))
 
-	def visit(self, n:BinaryOperation, func:IRFunction):
+	def visit_BinaryOperation(self, n:BinaryOperation, func:IRFunction):
 		if n.operator == '&&':
 			n.left.accept(self, func)
 			func.append(('IF',))
@@ -451,39 +451,56 @@ class IRCode(Visitor):
 			right = n.right.type
 			left = n.left.type
 			op = n.operator
+			# Convertir el operador a un operador de un carácter
+			op = dict_equivalence.get(op, op) # Convertir a un operador de un carácter
+			# Obtener el tipo de la operacion
 			op = self._binop_code[(left, op, right)]
 			# Agregar la instruccion al codigo IR
 			func.append((op,))
 		
-	def visit(self, n:UnaryOperation, func:IRFunction):
-		n.operand.accept(self, func)
-		ops = self._unaryop_code.get((n.operator, n.type), None)
-		if ops:
-			func.extend(ops)
+	# def visit(self, n:UnaryOperation, func:IRFunction):
+	# 	n.operand.accept(self, func)
+	# 	ops = self._unaryop_code.get((n.operator, n.type), None)
+	# 	if ops:
+	# 		func.extend(ops)
 		
-	def visit(self, n:TypeConversion, func:IRFunction):
-		n.expression.accept(self, func)
-		ops = self._typecast_code.get((n.expression.type, n.target_type), None)
-		if ops:
-			func.extend(ops)
+	# def visit(self, n:TypeConversion, func:IRFunction):
+	# 	n.expression.accept(self, func)
+	# 	ops = self._typecast_code.get((n.expression.type, n.target_type), None)
+	# 	if ops:
+	# 		func.extend(ops)
 		
-	def visit(self, n:FunctionCall, func:IRFunction):
-		for arg in reversed(n.arguments):
-			arg.accept(self, func)
-		func.append(('CALL', n.name))
+	# def visit(self, n:FunctionCall, func:IRFunction):
+	# 	for arg in reversed(n.arguments):
+	# 		arg.accept(self, func)
+	# 	func.append(('CALL', n.name))
 	
-	def visit(self, n:PrimitiveReadLocation, func:IRFunction):
-		if n.name in func.locals:
-			func.append(('LOCAL_GET', n.name))
-		elif n.name in func.module.globals:
-			func.append(('GLOBAL_GET', n.name))
-		else:
-			raise RuntimeError(f"Variable no definida: {n.name}")
+	# def visit(self, n:PrimitiveReadLocation, func:IRFunction):
+	# 	if n.name in func.locals:
+	# 		func.append(('LOCAL_GET', n.name))
+	# 	elif n.name in func.module.globals:
+	# 		func.append(('GLOBAL_GET', n.name))
+	# 	else:
+	# 		raise RuntimeError(f"Variable no definida: {n.name}")
 		
-	def visit(self, n: MemoryReadLocation, func: IRFunction):
-		n.address.accept(self, func)
-		op = _memory_ops.get(n.type, ('PEEKI', 'POKEI'))[0]
-		func.append((op,))
+	# def visit(self, n: MemoryReadLocation, func: IRFunction):
+	# 	n.address.accept(self, func)
+	# 	op = _memory_ops.get(n.type, ('PEEKI', 'POKEI'))[0]
+	# 	func.append((op,))
+
+	def visit_Print(self, n:Print, func:IRFunction):
+		n.expression.accept(self, func) # Se le asigna el valor a la expresion
+		func.append(('PRINTI',)) # Se le asigna el valor a la variable
+
+	#Generic Visit
+
+	def generic_visit(self, node, func:IRFunction):
+		# Si el nodo no tiene un metodo de visita especifico, se llama al metodo de visita generico
+		for child in node.children:
+			if isinstance(child, Node):
+				child.accept(self, func)
+			else:
+				print(f"Unknown child type: {type(child)}")
 
 
 if __name__ == '__main__':
@@ -500,11 +517,17 @@ if __name__ == '__main__':
 	
 	filename = sys.argv[1]
 
-	lexer = Lexer(filename)
-	source_code = list(lexer.tokenize())
-	parser = Parser(source_code)
+	with open(filename, "r", encoding="utf-8") as f:
+		source_code = f.read()
+
+	lexer = Lexer(source_code)
+	tokens = list(lexer.tokenize())
+	parser = Parser(tokens)
 	top = parser.parse()
-	env = Checker.checker(top)
+	print('AST generado:')
+	print(top)
+	env = Checker.check(top)
+
 		
 	if not errors_detected():
 		module = IRCode.gencode(top)
