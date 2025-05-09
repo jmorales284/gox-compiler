@@ -7,7 +7,7 @@ import os
 os.system('cls' if os.name == 'nt' else 'clear')
 
 # 1. Cargar código fuente
-SOURCE_FILE = "brk.gox"  # Nombre del archivo de entrada
+SOURCE_FILE = "prueba.gox"  # Nombre del archivo de entrada
 OUTPUT_FILE = "ast_output.json"  # Nombre del archivo de salida
 
 # 2. Leer y tokenizar
