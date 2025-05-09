@@ -336,7 +336,7 @@ class MemoryAssignmentLocation(Node):
         address (int): Dirección de memoria donde se almacena el valor.
         expression: Expresión que se asigna a la dirección de memoria.
     """
-    def __init__(self, address, expression):
+    def __init__(self, address, expression,lineno=None):
         super().__init__("MemoryAssignmentLocation")
         self.address = address
         self.expression = expression

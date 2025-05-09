@@ -172,7 +172,7 @@ class Parser:
         self.consume("SEMI", "Se esperaba ';' después de la expresión")
 
         if name_token.value.startswith("`"):
-            return MemoryAssignmentLocation(name_token.value[1:], expr)
+            return MemoryAssignmentLocation(name_token.value[1:], expr,lineno=self.get_lineno())
         return PrimitiveAssignmentLocation(name_token.value, expr,lineno=self.get_lineno())
 
 
@@ -457,7 +457,7 @@ class Parser:
     def term(self) -> Node:
 
         left = self.factor()
-        while self.peek() and self.peek().type in ('TIMES', 'DIVIDE', 'MODULO'):
+        while self.peek() and self.peek().type in ('TIMES', 'DIVIDE', 'MODULO','CARET'):
             op = self.advance().type
             right = self.factor()
             left = BinaryOperation(left, op, right,lineno=self.get_lineno())
