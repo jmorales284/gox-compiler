@@ -90,6 +90,11 @@ class Print(Node):
 class Conditional(Node):
     def __init__(self, condition, true_branch, false_branch=None, lineno=None):
         super().__init__("Conditional",lineno=lineno)  # Tipo de nodo: "Conditional"
+        self.condition = condition  # Expresión que se evalúa
+        self.true_branch = true_branch
+        self.false_branch = false_branch  # Rama falsa (opcional)
+
+        # Agregar nodos hijos para manejar la estructura del árbol
         self.add_child(Node("Condition", condition))  # Nodo hijo que representa la condición
         self.add_child(Node("True", true_branch))  # Nodo hijo para la rama verdadera
         if false_branch:

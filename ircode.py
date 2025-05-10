@@ -393,19 +393,23 @@ class IRCode(Visitor):
 
 
 	def visit_Conditional(self, n:Conditional, func:IRFunction):
-		n.test.accept(self, func) # Se le asigna el valor a la condicion
+		n.condition.accept(self, func) # Se le asigna el valor a la condicion
 		func.append(('IF',))
-		n.consequence.accept(self, func) # Se le asigna el valor a la consecuencia
-		if n.alternative:
+		for stmt in n.true_branch:
+			stmt.accept(self, func)
+
+		if n.false_branch:
 			func.append(('ELSE',))
-			n.alternative.accept(self, func)
+			for stmt in n.false_branch:
+				stmt.accept(self, func)
 		func.append(('ENDIF',))
 
 	def visit_WhileLoop(self, n:WhileLoop, func:IRFunction):
 		func.append(('LOOP',))
-		n.test.accept(self, func) # Se le asigna el valor a la condicion
+		n.condition.accept(self, func) # Se le asigna el valor a la condicion
 		func.append(('CBREAK',))
-		n.body.accept(self, func) # Se le asigna el valor al cuerpo
+		for stmt in n.body:
+			stmt.accept(self, func)
 		func.append(('CONTINUE',))
 		func.append(('ENDLOOP',))
 		
@@ -425,15 +429,7 @@ class IRCode(Visitor):
 		func.append(('RET',))
 
 	# # --- Declaration
-		
-	# def visit_VariableDeclaration(self, n:VariableDeclaration, func:IRFunction):
-	# 	ir_type = _typemap.get(n.var_type, 'I')
-	# 	func.new_local(n.name, ir_type) # Se le asigna el tipo a la variable
-	# 	if n.value:
-	# 		n.value.accept(self, func)
-			
-	# 		func.append(('LOCAL_SET', n.name)) # Se le asigna el valor a la variable
-	
+
 	def visit_VariableDeclaration(self, n:VariableDeclaration, func:IRFunction):
 		ir_type = _typemap.get(n.var_type, 'I')
 		
@@ -444,14 +440,13 @@ class IRCode(Visitor):
 		else:
 			func.new_local(n.name, ir_type)
 		
-		if n.value:
+		if n.value is not None:
 			n.value.accept(self, func)
 			if func.name == 'main':
 				func.append(('GLOBAL_SET', n.name))
 			else:
 				func.append(('LOCAL_SET', n.name))
-		else:
-			raise RuntimeError(f"Variable no definida: {n.name}")
+
 
 	def visit_FunctionDefinition(self, n:FunctionDefinition, func:IRFunction):
 		parmtypes = [ _typemap.get(p.type, 'I') for p in n.parameters ]
@@ -488,6 +483,7 @@ class IRCode(Visitor):
 			func.append(('CONSTI', int(n.value)))
 
 	def visit_BinaryOperation(self, n:BinaryOperation, func:IRFunction):
+		
 		if n.operator == '&&':
 			n.left.accept(self, func)
 			func.append(('IF',))
@@ -506,15 +502,18 @@ class IRCode(Visitor):
 			n.left.accept(self, func)
 			n.right.accept(self, func)
 			# Obtener los tipos de los hijos izquierdo y derecho y el operador
-			right = n.right.type
-			left = n.left.type
-			op = n.operator
+			
+			left_type = n.left.type
+			right_type = n.right.type
 			# Convertir el operador a un operador de un carácter
-			op = dict_equivalence.get(op, op) # Convertir a un operador de un carácter
+			op = dict_equivalence.get(n.operator, n.operator) # Convertir a un operador de un carácter
 			# Obtener el tipo de la operacion
-			op = self._binop_code[(left, op, right)]
+			op_code = self._binop_code[(left_type, op, right_type)]
 			# Agregar la instruccion al codigo IR
-			func.append((op,))
+			if op_code:
+				func.append((op_code,))
+			else:
+				raise RuntimeError(f"Operador no soportado: {op} para tipos {left_type} y {right_type}")
 		
 	def visit_UnaryOperation(self, n:UnaryOperation, func:IRFunction):
 		n.operand.accept(self, func)
@@ -536,8 +535,10 @@ class IRCode(Visitor):
 	
 	def visit_PrimitiveReadLocation(self, n:PrimitiveReadLocation, func:IRFunction):
 		if n.name in func.locals:
+			n.node_type = func.locals[n.name]
 			func.append(('LOCAL_GET', n.name))
 		elif n.name in func.module.globals:
+			n.node_type = func.module.globals[n.name].type
 			func.append(('GLOBAL_GET', n.name))
 		else:
 			raise RuntimeError(f"Variable no definida: {n.name}")

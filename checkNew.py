@@ -119,20 +119,19 @@ class Checker(Visitor):
         return node.type
 
     def visit_PrimitiveReadLocation(self, node: PrimitiveReadLocation, env: Symtab):
-        '''
-        Verifica que la variable esté declarada antes de ser usada.
-        Retorna su tipo.
-        '''
         symbol = env.get(node.name)
         if not symbol:
-            error(f"La variable '{node.name}' no está declarada.",node.lineno)
+            error(f"La variable '{node.name}' no está declarada.", node.lineno)
             return 'error'
-        return_type = None
         if isinstance(symbol, Parameter):
-            return_type = symbol.type 
+            node.type = symbol.type  # Asignar el tipo al nodo
+            return symbol.type
         elif isinstance(symbol, VariableDeclaration):
-            return_type = symbol.var_type
-        return return_type
+            node.type = symbol.var_type  # Asignar el tipo al nodo
+            return symbol.var_type
+        else:
+            error(f"Tipo desconocido para la variable '{node.name}'.", node.lineno)
+            return 'error'
 
     def visit_BinaryOperation(self, node: BinaryOperation, env: Symtab):
         '''
@@ -145,6 +144,9 @@ class Checker(Visitor):
         result_type = check_binop(node.operator, left_type, right_type)
         if result_type == 'error' or result_type is None:
             error(f"Error en operación binaria: tipos incompatibles '{left_type}' {node.operator} '{right_type}'",node.lineno)
+            node.type = 'error'
+        else:
+            node.type = result_type
         return result_type
 
     def visit_UnaryOperation(self, node: UnaryOperation, env: Symtab):
@@ -247,15 +249,12 @@ class Checker(Visitor):
             error(f"Error: La condición debe ser de tipo booleano, pero se encontró '{condition_type}'.",node.lineno)
 
         
-        # Verifica el bloque "then"
-        then_block = node.children[1].value
-        for stmt in then_block:
+        for stmt in node.true_branch:
             stmt.accept(self, env)
 
         # Verifica el bloque "else" si existe
-        if len(node.children) == 3:
-            else_block = node.children[2].value
-            for stmt in else_block:
+        if node.false_branch:
+            for stmt in node.false_branch:
                 stmt.accept(self, env)
 
     def visit_WhileLoop(self, node: WhileLoop, env: Symtab):
