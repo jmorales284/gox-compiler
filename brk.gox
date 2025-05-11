@@ -12,4 +12,8 @@ while true {
 	}
 }
 print -1;
+<<<<<<< HEAD
 break;
+=======
+
+>>>>>>> 89cce35dc68e55aefb45f273e1a1b9febd996c86

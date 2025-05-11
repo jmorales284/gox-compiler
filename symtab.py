@@ -72,6 +72,11 @@ class Symtab:
 		o FuncDeclaration)
 		'''
 		if name in self.entries:
+			#Claves especaiales que inician con $
+			if name.startswith('$'):
+				self.entries[name] = value
+				return
+			
 			if self.entries[name].dtype != value.dtype:
 				raise Symtab.SymbolConflictError()
 			else:
@@ -96,7 +101,10 @@ class Symtab:
 		table.add_column('value', style='bright_green')
 		
 		for k,v in self.entries.items():
-			value = f"{v.__class__.__name__}({v.name})"
+			if isinstance(v, bool):
+				value = f"{v.__class__.__name__}({v})"
+			else:
+				value = f"{v.__class__.__name__}({v.name})"
 			table.add_row(k, value)
 		print(table, '\n')
 		

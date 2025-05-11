@@ -1,5 +1,5 @@
 import sys
-from lexer import Lexer
+from glexer import Lexer
 from rich.table import Table
 from rich.console import Console
 
@@ -8,8 +8,8 @@ def analizar_archivo(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             code = f.read()
         
-        lexer = Lexer()
-        tokens = lexer.tokenize(code)
+        lexer = Lexer(code)
+        tokens = lexer.tokenize()
 
         table = Table(title=f"Análisis Léxico - {file_path}")
         table.add_column("Tipo", style="cyan")

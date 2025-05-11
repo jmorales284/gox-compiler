@@ -6,6 +6,7 @@ node_modules/
 .entorno
 entorno/
 Proba
+codesProfe/
 
 # Ignorar archivos temporales de sistema operativo
 *.log
