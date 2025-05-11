@@ -5,7 +5,11 @@
 
 /* Integer operations */
 
+<<<<<<< HEAD
+const a = 1;          // Integer constant
+=======
 const a int = 1;          // Integer constant
+>>>>>>> 89cce35dc68e55aefb45f273e1a1b9febd996c86
 var b int = 2;        // Integer variable declaration (with value)
 var c int;            // Integer declaration (no value)
 

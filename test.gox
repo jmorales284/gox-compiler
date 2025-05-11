@@ -1,7 +1,11 @@
 // Analisis Semantico
 
+<<<<<<< HEAD
+var x int = 3.14;
+=======
 var x int = 3;
 var m int = 2;
+>>>>>>> 89cce35dc68e55aefb45f273e1a1b9febd996c86
 
 func fib(n int) int {
 	if n <= 1 { 
@@ -10,7 +14,11 @@ func fib(n int) int {
 	return fib(m-1) + fib(n-2);
 }
 
+<<<<<<< HEAD
+func main() int {
+=======
 func main() {
+>>>>>>> 89cce35dc68e55aefb45f273e1a1b9febd996c86
 	var n float = 12;
 
 	print fib(n);

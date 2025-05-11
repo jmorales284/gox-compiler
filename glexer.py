@@ -57,8 +57,8 @@ class Lexer:
         '{': 'LBRACE',
         '}': 'RBRACE',
         ',': 'COMMA',
-        '`': 'DEREF',
-        '^': 'CARET',
+        '`': 'BACKTICK',
+        '^': 'HAT',
         '!': 'NOT',
     }
 
@@ -70,7 +70,6 @@ class Lexer:
     BOOL_PAT = re.compile(r'\b(true|false)\b')
     COMMENT_LINE_PAT = re.compile(r'//.*')
     COMMENT_BLOCK_PAT = re.compile(r'/\*.*?\*/', re.DOTALL)
-    MEMORY_PAT = re.compile(r'`[a-zA-Z_][a-zA-Z0-9_]*|`\([^)]*\)')
 
     def __init__(self, text):
         self.text = text
@@ -113,12 +112,6 @@ class Lexer:
                 self.index += 2
                 continue
 
-            m = self.MEMORY_PAT.match(self.text, self.index)
-            if m:
-                value = m.group(0)
-                self.tokens.append(Token('MEMORY', value, self.lineno))
-                self.index = m.end()
-                continue
 
             if char in self.ONE_CHAR:
                 self.tokens.append(Token(self.ONE_CHAR[char], char, self.lineno))

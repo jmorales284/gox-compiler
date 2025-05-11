@@ -95,6 +95,10 @@ class Parser:
 
 
     def statement(self) -> Node:
+            
+            if self.peek().type == "BACKTICK":
+                return self.assignment()
+
             if self.peek().type == "ID":
                 # Guardamos posición por si necesitamos retroceder
                 current_pos = self.current
@@ -166,17 +170,23 @@ class Parser:
         return params
 
     def assignment(self) -> Node:
-        name_token = self.consume("ID", "Se esperaba identificador")
-        self.consume("ASSIGN", "Se esperaba '=' después del identificador")
-        expr = self.expression()
-        self.consume("SEMI", "Se esperaba ';' después de la expresión")
-
-        if name_token.value.startswith("`"):
-            return MemoryAssignmentLocation(name_token.value[1:], expr,lineno=self.get_lineno())
-        return PrimitiveAssignmentLocation(name_token.value, expr,lineno=self.get_lineno())
-
-
-
+        if self.match("BACKTICK"):
+            # Procesar la dirección de memoria como una expresión
+            self.consume("LPAREN", "Se esperaba '(' después de '`'")
+            addr_expr = self.expression()  # Dirección de memoria
+            self.consume("RPAREN", "Se esperaba ')' después de la dirección de memoria")
+            self.consume("ASSIGN", "Se esperaba '=' después de la dirección de memoria")
+            value_expr = self.expression()  # Valor a asignar
+            self.consume("SEMI", "Se esperaba ';' después de la expresión")
+            return MemoryAssignmentLocation(addr_expr, value_expr, lineno=self.get_lineno())
+        elif self.peek() and self.peek().type == "ID":
+            name_token = self.consume("ID", "Se esperaba nombre de variable")
+            self.consume("ASSIGN", "Se esperaba '=' después del nombre de variable")
+            expr = self.expression()
+            self.consume("SEMI", "Se esperaba ';' después de la expresión")
+            return PrimitiveAssignmentLocation(name_token.value, expr, lineno=self.get_lineno())
+        else:
+            raise SyntaxError(f"Línea {self.peek().lineno}: Se esperaba nombre de variable después de '='")
 
     def vardecl(self) -> VariableDeclaration:
         
@@ -323,48 +333,32 @@ class Parser:
     def factor(self):
         if self.match("true"):
             return Literal("bool", 'true')
-        
         elif self.match("false"):
             return Literal("bool", 'false')
-    
         elif self.match("INTEGER"):
-            return Literal('int',self.tokens[self.current - 1].value)
-        
+            return Literal('int', self.tokens[self.current - 1].value)
         elif self.match("FLOAT"):
-            return Literal('float',self.tokens[self.current - 1].value)
-        
+            return Literal('float', self.tokens[self.current - 1].value)
         elif self.match("CHAR"):
             char_value = self.tokens[self.current - 1].value
             processed_char = char_value[1:-1].encode().decode('unicode_escape')
-            return Literal('char',processed_char)
-        
-        elif self.match("STRING_LITERAL"):
-            string_tokens = []
-            while self.peek() and self.peek().type != "STRING_LITERAL":
-                string_tokens.append(self.advance().value)
-            self.consume("STRING_LITERAL", "Se esperaba cierre de comillas")
-            string_value = "".join(string_tokens)
-            return Literal('string',string_value)
-        
+            return Literal('char', processed_char)
         elif self.match("BOOLEAN"):
-            return Literal('bool',self.tokens[self.current - 1].value.lower())
-        
-        elif self.match("PLUS") or self.match("MINUS") or self.match("CARET") or self.match("NOT"):
+            return Literal('bool', self.tokens[self.current - 1].value.lower())
+        elif self.match("PLUS") or self.match("MINUS") or self.match("HAT") or self.match("NOT"):
             op = self.tokens[self.current - 1].type
-            return UnaryOperation(op, self.factor())
-        
+            operand = self.factor()
+            return UnaryOperation(op, operand)
         elif self.match("LPAREN"):
             expr = self.expression()
             self.consume("RPAREN", "Se esperaba ')'")
             return expr
-        
-        elif self.match("int") or self.match("float") or self.match("bool") or self.match("char"):
-            type_name = self.tokens[self.current - 1].value.lower()
-            self.consume("LPAREN", f"Se esperaba '(' después de {type_name}")
-            expr = self.expression()
-            self.consume("RPAREN", "Se esperaba ')'")
-            return TypeConversion(type_name, expr)
-        
+        elif self.match("BACKTICK"):
+            # Procesar lectura de memoria
+            self.consume("LPAREN", "Se esperaba '(' después de '`'")
+            addr_expr = self.expression()
+            self.consume("RPAREN", "Se esperaba ')' después de la dirección de memoria")
+            return MemoryReadLocation(addr_expr, lineno=self.get_lineno())
         elif self.match("ID"):
             id_name = self.tokens[self.current - 1].value
             if self.peek() and self.peek().type == "LPAREN":
@@ -375,15 +369,11 @@ class Parser:
                     while self.match("COMMA"):  # Mientras haya comas
                         args.append(self.expression())  # Parsear siguiente argumento
                     self.consume("RPAREN", "Se esperaba ')' después de los argumentos")
-                return FunctionCall(id_name, args,lineno=self.get_lineno())
+                return FunctionCall(id_name, args, lineno=self.get_lineno())
             else:
-                if id_name.startswith("`"):
-                    return MemoryReadLocation(id_name[1:])
-                return PrimitiveReadLocation(id_name, lineno=self.tokens[self.current - 1].lineno)
-        
+                return PrimitiveReadLocation(id_name, lineno=self.get_lineno())
         else:
             raise SyntaxError(f"Línea {self.peek().lineno}: Factor inesperado '{self.peek().value}'")
-    
 
 
 

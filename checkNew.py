@@ -119,20 +119,19 @@ class Checker(Visitor):
         return node.type
 
     def visit_PrimitiveReadLocation(self, node: PrimitiveReadLocation, env: Symtab):
-        '''
-        Verifica que la variable esté declarada antes de ser usada.
-        Retorna su tipo.
-        '''
         symbol = env.get(node.name)
         if not symbol:
-            error(f"La variable '{node.name}' no está declarada.",node.lineno)
+            error(f"La variable '{node.name}' no está declarada.", node.lineno)
             return 'error'
-        return_type = None
         if isinstance(symbol, Parameter):
-            return_type = symbol.type 
+            node.type = symbol.type  # Asignar el tipo al nodo
+            return symbol.type
         elif isinstance(symbol, VariableDeclaration):
-            return_type = symbol.var_type
-        return return_type
+            node.type = symbol.var_type  # Asignar el tipo al nodo
+            return symbol.var_type
+        else:
+            error(f"Tipo desconocido para la variable '{node.name}'.", node.lineno)
+            return 'error'
 
     def visit_BinaryOperation(self, node: BinaryOperation, env: Symtab):
         '''
@@ -145,6 +144,9 @@ class Checker(Visitor):
         result_type = check_binop(node.operator, left_type, right_type)
         if result_type == 'error' or result_type is None:
             error(f"Error en operación binaria: tipos incompatibles '{left_type}' {node.operator} '{right_type}'",node.lineno)
+            node.type = 'error'
+        else:
+            node.type = result_type
         return result_type
 
     def visit_UnaryOperation(self, node: UnaryOperation, env: Symtab):
@@ -154,8 +156,29 @@ class Checker(Visitor):
         2. Retorna el tipo resultante (dependiendo del operador).
         '''
         operand_type = node.operand.accept(self, env)
-        # Aquí puedes añadir reglas de tipo según el operador
-        return operand_type
+        if node.operator == 'HAT':
+            if operand_type != 'int':
+                error(f"Error: El operador '{node.operator}' solo es válido para enteros, pero se encontró '{operand_type}'.",node.lineno)
+                node.type = 'error'
+            return 'int'
+        
+        elif node.operator == 'NOT':
+            if operand_type != 'bool':
+                error(f"Error: El operador '{node.operator}' solo es válido para booleanos, pero se encontró '{operand_type}'.",node.lineno)
+                node.type = 'error'
+            return 'bool'
+        
+        elif node.operator in ('PLUS', 'MINUS'):
+            if operand_type not in ('int', 'float'):
+                error(f"Error: El operador '{node.operator}' solo es válido para enteros o flotantes, pero se encontró '{operand_type}'.",node.lineno)
+                node.type = 'error'
+            return operand_type
+        else:
+            error(f"Error: Operador unario desconocido '{node.operator}'.",node.lineno)
+            node.type = 'error'
+            return 'error'
+        
+
 
     def visit_FunctionCall(self, node: FunctionCall, env: Symtab):
         '''
@@ -247,15 +270,12 @@ class Checker(Visitor):
             error(f"Error: La condición debe ser de tipo booleano, pero se encontró '{condition_type}'.",node.lineno)
 
         
-        # Verifica el bloque "then"
-        then_block = node.children[1].value
-        for stmt in then_block:
+        for stmt in node.true_branch:
             stmt.accept(self, env)
 
         # Verifica el bloque "else" si existe
-        if len(node.children) == 3:
-            else_block = node.children[2].value
-            for stmt in else_block:
+        if node.false_branch:
+            for stmt in node.false_branch:
                 stmt.accept(self, env)
 
     def visit_WhileLoop(self, node: WhileLoop, env: Symtab):
@@ -324,6 +344,26 @@ class Checker(Visitor):
         Verifica la expresión dentro del print.
         '''
         node.children[0].value.accept(self, env)
+
+    # ----------------------
+    # MANEJO DE MAMORIA
+    # ----------------------
+    def visit_MemoryAssignmentLocation(self, node: MemoryAssignmentLocation, env):
+        addr_type = node.address.accept(self, env)
+        if addr_type != 'int':
+            error(f"Error: La dirección de memoria debe ser de tipo entero, pero se encontró '{addr_type}'.",node.lineno)
+        
+        value_type = node.value.accept(self, env)
+        node.type = value_type
+        return value_type
+    
+    def visit_MemoryReadLocation(self, node: MemoryReadLocation, env):
+        addr_type = node.address.accept(self, env)
+        if addr_type != 'int':
+            error(f"Error: La dirección de memoria debe ser de tipo entero, pero se encontró '{addr_type}'.",node.lineno)
+        
+        node.type = 'int'
+        return 'int'
 
     # ----------------------
     # GENERIC VISIT

@@ -1,5 +1,14 @@
 /* mandel_loop.gox */
 
+<<<<<<< HEAD
+const xmin = -2.0;
+const xmax = 1.0;
+const ymin = -1.5;
+const ymax = 1.5;
+const width = 80.0;
+const height = 40.0;
+const threshhold = 1000;
+=======
 const xmin float = -2.0;
 const xmax float = 1.0;
 const ymin float = -1.5;
@@ -7,6 +16,7 @@ const ymax float = 1.5;
 const width float = 80.0;
 const height float = 40.0;
 const threshhold int = 1000;
+>>>>>>> 89cce35dc68e55aefb45f273e1a1b9febd996c86
 
 var dx float = (xmax - xmin)/width;
 var dy float = (ymax - ymin)/height;

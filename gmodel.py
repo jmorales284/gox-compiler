@@ -90,6 +90,11 @@ class Print(Node):
 class Conditional(Node):
     def __init__(self, condition, true_branch, false_branch=None, lineno=None):
         super().__init__("Conditional",lineno=lineno)  # Tipo de nodo: "Conditional"
+        self.condition = condition  # Expresión que se evalúa
+        self.true_branch = true_branch
+        self.false_branch = false_branch  # Rama falsa (opcional)
+
+        # Agregar nodos hijos para manejar la estructura del árbol
         self.add_child(Node("Condition", condition))  # Nodo hijo que representa la condición
         self.add_child(Node("True", true_branch))  # Nodo hijo para la rama verdadera
         if false_branch:
@@ -213,6 +218,7 @@ class Parameter(Node):
         super().__init__("Parameter")
         self.name = name
         self.type = type
+        self.is_constant = False  # Por defecto, no es constante
 
     def __repr__(self):
         return f'Parameter({self.name}, {self.type})'
@@ -324,40 +330,29 @@ class PrimitiveReadLocation(Node):
     def __repr__(self):
         return f'PrimitiveReadLocation({self.name})'
 
-
-class MemoryAssignmentLocation(Node):
-    """
-    Representa una asignación de valor a una dirección de memoria en goxlang.
-
-    Ejemplo en goxlang:
-        `address = 123;
-
-    Atributos:
-        address (int): Dirección de memoria donde se almacena el valor.
-        expression: Expresión que se asigna a la dirección de memoria.
-    """
-    def __init__(self, address, expression,lineno=None):
-        super().__init__("MemoryAssignmentLocation")
-        self.address = address
-        self.expression = expression
-    
-    def __repr__(self):
-        return f'MemoryAssignmentLocation({self.address}), {self.expression}'
-
-
 class MemoryReadLocation(Node):
     """
-    Representa la lectura de un valor desde una dirección de memoria en goxlang.
+    Representa la lectura de una variable en goxlang.
 
     Ejemplo en goxlang:
-        print `address + 10;
+        print abc;
 
     Atributos:
-        address (int): Dirección de memoria que se lee.
+        name (str): Nombre de la variable que se lee.
     """
-    def __init__(self, address):
-        super().__init__("MemoryReadLocation")
+    def __init__(self, address, lineno=None):
+        super().__init__("MemoryReadLocation", lineno=lineno)  # Llama al constructor de Node con el tipo "MemoryReadLocation"
         self.address = address
     
     def __repr__(self):
         return f'MemoryReadLocation({self.address})'
+    
+class MemoryAssignmentLocation(Node):
+    def __init__(self, address, value, lineno=None):
+        super().__init__("MemoryAssignmentLocation", lineno=lineno)
+        self.address = address  # Expresión de dirección
+        self.value = value      # Valor a asignar
+        
+    def __repr__(self):
+        return f'MemoryAssignmentLocation({self.address}, {self.value})'
+
