@@ -134,16 +134,21 @@ class Checker(Visitor):
             return 'error'
 
     def visit_BinaryOperation(self, node: BinaryOperation, env: Symtab):
-        '''
-        Verifica una operación binaria.
-        1. Evalúa los tipos de ambos operandos.
-        2. Usa `check_binop` para verificar compatibilidad.
-        '''
         left_type = node.left.accept(self, env)
         right_type = node.right.accept(self, env)
+
+        # Intentar conversión implícita si los tipos no coinciden
+        if left_type != right_type:
+            if left_type == 'int' and right_type == 'float':
+                node.left = TypeConversion('float', node.left)
+                left_type = 'float'
+            elif left_type == 'float' and right_type == 'int':
+                node.right = TypeConversion('float', node.right)
+                right_type = 'float'
+
         result_type = check_binop(node.operator, left_type, right_type)
         if result_type == 'error' or result_type is None:
-            error(f"Error en operación binaria: tipos incompatibles '{left_type}' {node.operator} '{right_type}'",node.lineno)
+            error(f"Error en operación binaria: tipos incompatibles '{left_type}' {node.operator} '{right_type}'", node.lineno)
             node.type = 'error'
         else:
             node.type = result_type
@@ -211,6 +216,7 @@ class Checker(Visitor):
         Verifica una conversión de tipo. Se asume que cualquier conversión es válida.
         '''
         expr_type = node.expression.accept(self, env)
+        node.type = node.target_type
         return node.target_type
 
     # ----------------------
@@ -351,17 +357,19 @@ class Checker(Visitor):
     def visit_MemoryAssignmentLocation(self, node: MemoryAssignmentLocation, env):
         addr_type = node.address.accept(self, env)
         if addr_type != 'int':
-            error(f"Error: La dirección de memoria debe ser de tipo entero, pero se encontró '{addr_type}'.",node.lineno)
-        
+            error(f"Error: La dirección de memoria debe ser de tipo entero, pero se encontró '{addr_type}'.", node.lineno)
+            return 'error'
+
         value_type = node.value.accept(self, env)
         node.type = value_type
         return value_type
-    
+
     def visit_MemoryReadLocation(self, node: MemoryReadLocation, env):
         addr_type = node.address.accept(self, env)
         if addr_type != 'int':
-            error(f"Error: La dirección de memoria debe ser de tipo entero, pero se encontró '{addr_type}'.",node.lineno)
-        
+            error(f"Error: La dirección de memoria debe ser de tipo entero, pero se encontró '{addr_type}'.", node.lineno)
+            return 'error'
+
         node.type = 'int'
         return 'int'
 
