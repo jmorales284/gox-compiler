@@ -440,7 +440,7 @@ class IRCode(Visitor):
 		
 		if n.value is not None:
 			n.value.accept(self, func)
-			if n.name == 'memsize' and n.var_type == 'int':
+			if isinstance(n.value, UnaryOperation) and n.value.operator == 'HAT':
 				func.append(('GROW',))
 			if func.name == 'main':
 				func.append(('GLOBAL_SET', n.name))
@@ -507,6 +507,16 @@ class IRCode(Visitor):
 			right_type = n.right.type
 			# Convertir el operador a un operador de un carácter
 			op = dict_equivalence.get(n.operator, n.operator) # Convertir a un operador de un carácter
+
+			# Verificar si se necesita una conversion de tipo
+			if left_type != right_type:
+				if left_type == 'int' and right_type == 'float':
+					func.append(('ITOF',))
+					left_type = 'float'
+				elif left_type == 'float' and right_type == 'int':
+					func.append(('FTOI',))
+					right_type = 'float'
+
 			# Obtener el tipo de la operacion
 			op_code = self._binop_code[(left_type, op, right_type)]
 			# Agregar la instruccion al codigo IR
@@ -549,36 +559,36 @@ class IRCode(Visitor):
 		else:
 			raise RuntimeError(f"Variable no definida: {n.name}")
 		
-	def visit_MemoryReadLocation(self, n:MemoryReadLocation, func:IRFunction):
-		#Procesar la direccion de memoria
-		n.address.accept(self, func)
-
-		# Determinar el tipo de dato y generar la instrucción correspondiente
-		if n.type == 'int':
-			func.append(('PEEKI',)) # Leer entero desde memoria
-		elif n.type == 'float':
-			func.append(('PEEKF',)) # Leer flotante desde memoria
-		elif n.type == 'char':
-			func.append(('PEEKB',)) # Leer byte desde memoria
-		else:
-			raise RuntimeError(f"Tipo de dato no soportado: {n.type}")
-		
-	def visit_MemoryAssignmentLocation(self, n:MemoryAssignmentLocation, func:IRFunction):
-		# Procesar el valor a escribir
-		n.value.accept(self, func)
-
+	def visit_MemoryReadLocation(self, n: MemoryReadLocation, func: IRFunction):
 		# Procesar la dirección de memoria
 		n.address.accept(self, func)
 
 		# Determinar el tipo de dato y generar la instrucción correspondiente
 		if n.type == 'int':
-			func.append(('POKEI',)) # Escribir entero en memoria
+			func.append(('PEEKI',))  # Leer entero desde memoria
 		elif n.type == 'float':
-			func.append(('POKEF',)) # Escribir flotante en memoria
+			func.append(('PEEKF',))  # Leer flotante desde memoria
 		elif n.type == 'char':
-			func.append(('POKEB',)) # Escribir byte en memoria
+			func.append(('PEEKB',))  # Leer byte desde memoria
 		else:
-			raise RuntimeError(f"Tipo de dato no soportado: {n.type}")
+			raise RuntimeError(f"Tipo de dato no soportado para lectura de memoria: {n.type}")
+		
+	def visit_MemoryAssignmentLocation(self, n: MemoryAssignmentLocation, func: IRFunction):
+		# Procesar la dirección de memoria primero
+		n.address.accept(self, func)
+
+		# Procesar el valor a escribir
+		n.value.accept(self, func)
+
+		# Determinar el tipo de dato y generar la instrucción correspondiente
+		if n.value.type == 'int':
+			func.append(('POKEI',))  # Escribir entero en memoria
+		elif n.value.type == 'float':
+			func.append(('POKEF',))  # Escribir flotante en memoria
+		elif n.value.type == 'char':
+			func.append(('POKEB',))  # Escribir byte en memoria
+		else:
+			raise RuntimeError(f"Tipo de dato no soportado para escritura en memoria: {n.value.type}")
 
 	def visit_Print(self, n: Print, func: IRFunction):
 		n.expression.accept(self, func)  # Procesar la expresión a imprimir
