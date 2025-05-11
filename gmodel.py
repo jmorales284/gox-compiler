@@ -272,8 +272,8 @@ class Location(Node):
 
 
 class TypeConversion(Node):
-    def __init__(self, target_type, expression):
-        super().__init__("TypeConversion")
+    def __init__(self, target_type, expression, lineno=None):
+        super().__init__("TypeConversion", lineno=lineno)  # Llama al constructor de Node con el tipo "TypeConversion"
         self.target_type = target_type  # Tipo de conversión (int, float)
         self.expression = expression  # Expresión a convertir
 
