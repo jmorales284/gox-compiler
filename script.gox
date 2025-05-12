@@ -12,11 +12,7 @@
 var x int;
 x = 5;
 
-<<<<<<< HEAD
-const PI = 3.1415;
-=======
 const PI float= 3.1415;
->>>>>>> 89cce35dc68e55aefb45f273e1a1b9febd996c86
 
 
 var y int = 3;
