@@ -10,8 +10,8 @@ func fib(n int) int {
 	return fib(m-1) + fib(n-2);
 }
 
-func main() {
-	var n float = 12;
+func main1() {
+	var n int = 12;
 
 	print fib(n);
 }
