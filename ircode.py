@@ -1,4 +1,6 @@
 # ircode.py
+# Juan Manuel Morales
+# Camilo Muñoz Albornoz
 '''
 Una Máquina Intermedia "Virtual"
 ================================
@@ -202,7 +204,7 @@ from gmodel  import *
 # Todo el código IR se empaquetará en un módulo. Un 
 # módulo es un conjunto de funciones.
 
-# Es un contenedor de funciones y variables globales.
+# Clase IRModule: Contenedor de Todo el codigo IR con funciones y variables globales
 class IRModule:
 	def __init__(self):
 		self.functions = { }       # Dict de funciones IR , para guardar las funciones
@@ -218,7 +220,7 @@ class IRModule:
 		for func in self.functions.values():
 			func.dump()
 			
-# Variables Globales
+# Clase IRGlobal: Representa una variable global en el módulo.
 class IRGlobal:
 	def __init__(self, name, type):
 		self.name = name # Nombre de la variable
@@ -233,14 +235,13 @@ class IRGlobal:
 # función. También incluyen metadatos como el nombre 
 # de la función, los parámetros y el tipo de retorno.
 
-# Clase para el manejo de funciones
+# Clase IRFunction: Representa una función en el módulo.
 class IRFunction:
 	def __init__(self, module, name, parmnames, parmtypes, return_type, imported=False):
 		# Agreguemos la lista de funciones del módulo adjunto
-		self.module = module
-		module.functions[name] = self
-		
-		self.name = name
+		self.module = module # Modulo al que pertenece la funcion
+		module.functions[name] = self # Agregamos la funcion al modulo
+		self.name = name 
 		self.parmnames = parmnames
 		self.parmtypes = parmtypes
 		self.return_type = return_type
@@ -263,7 +264,7 @@ class IRFunction:
 		for instr in self.code:
 			print(instr)
 			
-# Mapeo de tipos de GoxLang a tipos de IR
+# Mapeo de tipos de GoxLang a tipos de IR 
 _typemap = {
 	'int'  : 'I',
 	'float': 'F',
@@ -277,8 +278,9 @@ def new_temp(n=[0]):
 	return f'$temp{n[0]}'
 
 # Una función de nivel superior que comenzará a generar IRCode
-
+# Clase IRCode: Generador de codigo IR recorriendo el arbol de sintaxis
 class IRCode(Visitor):
+	# Diccion de operadores binarios y sus instrucciones IR correspondientes
 	_binop_code = {
 		('int', '+', 'int')  : 'ADDI',
 		('int', '-', 'int')  : 'SUBI',
@@ -308,7 +310,19 @@ class IRCode(Visitor):
 		('char', '>=', 'char') : 'GEI',
 		('char', '==', 'char') : 'EQI',
 		('char', '!=', 'char') : 'NEI',
+
+	#Añadidos ya que no existen en el lenguaje
+		('bool', '&&', 'bool') : 'ANDI',
+		('bool', '||', 'bool') : 'ORI',
+		('bool', '<',  'bool') : 'LTI',
+		('bool', '<=', 'bool') : 'LEI',
+		('bool', '>',  'bool') : 'GTI',
+		('bool', '>=', 'bool') : 'GEI',
+		('bool', '==', 'bool') : 'EQI',
+		('bool', '!=', 'bool') : 'NEI',
 	}
+
+	# Diccion de operadores unarios y sus instrucciones IR correspondientes
 	_unaryop_code = {
 		('+', 'int')   : [],
 		('+', 'float') : [],
@@ -317,13 +331,14 @@ class IRCode(Visitor):
 		('!', 'bool')  : [('CONSTI', -1), ('MULI',)],
 		('^', 'int')   : [ ('GROW',) ]
 	}
+	# Diccion de conversiones de tipo y sus instrucciones IR correspondientes
 	_typecast_code = {
 		# (from, to) : [ ops ]
 		('int', 'float') : [ ('ITOF',) ],
 		('float', 'int') : [ ('FTOI',) ],
 	}
 
-	
+	# Diccion de operadores y sus equivalentes en el lenguaje
 	dict_equivalence={
 		'PLUS': '+',
 		'MINUS': '-',
@@ -349,6 +364,7 @@ class IRCode(Visitor):
 		'CARET': '^'
 	}
 
+	# --- Constructor: Generador de codigo IR
 	@classmethod
 	def gencode(cls, node:Program):
 		'''
@@ -371,47 +387,45 @@ class IRCode(Visitor):
 		return module
 	
 	# --- Statements
-	
-	# def visit(self, n:Assignment, func:IRFunction):
-	# 	n.location.sotre_value = n.expre  # Es una valiable le estamos asignando el valor de la expresion
-	# 	n.location.accept(self, func) # Se le asigna el valor a la variable
-	# 	n.expression.accept(self, func) # Se le asigna el valor a la expresion
-	# 	func.append(('POKEI',)) # Se le asigna el valor a la variable
 
+	# Metodos visit_* Procesan los nodos del arbol de sintaxis y generan instrucciones IR
+
+
+	# Asignacion de variables
 	def visit_PrimitiveAssignmentLocation(self, n:PrimitiveAssignmentLocation, func:IRFunction):
 		#Visitar la expresion
 		n.expression.accept(self, func) # Se le asigna el valor a la expresion
 		#Añadir la instruccion al codigo IR
-		if n.name in func.locals:
+		if n.name in func.locals: # Se decide si la variable es local o global
 			func.append(('LOCAL_SET', n.name))
 		elif n.name in func.module.globals:
 			func.append(('GLOBAL_SET', n.name))
 		else:
 			raise RuntimeError(f"Variable no definida: {n.name}")
 
-
+	# Condicional IF
 	def visit_Conditional(self, n:Conditional, func:IRFunction):
-		n.condition.accept(self, func) # Se le asigna el valor a la condicion
-		func.append(('IF',))
+		n.condition.accept(self, func) # Evaluar la condicion -> pila
+		func.append(('IF',)) # Iniciar la parte "consecuencia" de un "if"
 		for stmt in n.true_branch:
-			stmt.accept(self, func)
-
-		if n.false_branch:
+			stmt.accept(self, func) # Visitar la parte "consecuencia"
+		if n.false_branch: # Si hay una parte "alternativa"
 			func.append(('ELSE',))
 			for stmt in n.false_branch:
-				stmt.accept(self, func)
-		func.append(('ENDIF',))
+				stmt.accept(self, func) # Visitar la parte "alternativa"
+		func.append(('ENDIF',)) # Fin de la instruccion "if"
 
+	# Ciclo WHILE
 	def visit_WhileLoop(self, n:WhileLoop, func:IRFunction):
-		func.append(('LOOP',))
+		func.append(('LOOP',)) # Iniciar el ciclo
 		n.condition.accept(self, func) # Se le asigna el valor a la condicion
-		func.append(('CBREAK',))
+		func.append(('CBREAK',)) # Iniciar la parte "consecuencia" de un "if"
 		for stmt in n.body:
 			stmt.accept(self, func)
 		func.append(('CONTINUE',))
 		func.append(('ENDLOOP',))
 		
-
+	# Break, Continue y Return
 	def visit_break(self, n:Break, func:IRFunction):
 		func.append(('CONSTI',1))
 		func.append(('CBREAK',))
@@ -426,11 +440,11 @@ class IRCode(Visitor):
 			n.expression.accept(self, func)
 		func.append(('RET',))
 
-	# # --- Declaration
 
+	# Declaracion de variables
 	def visit_VariableDeclaration(self, n:VariableDeclaration, func:IRFunction):
-		ir_type = _typemap.get(n.var_type, 'I')
-		
+		ir_type = _typemap.get(n.var_type, 'I') 
+		# Registrar la variable en el ambito correcto
 		# Contexto global
 		if func.name == 'main':
 			func.module.globals[n.name] = IRGlobal(n.name, ir_type)
@@ -441,24 +455,26 @@ class IRCode(Visitor):
 		if n.value is not None:
 			n.value.accept(self, func)
 			if isinstance(n.value, UnaryOperation) and n.value.operator == 'HAT':
-				func.append(('GROW',))
+				func.append(('GROW',)) # Maneja '^' como un operador reserva de memoria
 			if func.name == 'main':
 				func.append(('GLOBAL_SET', n.name))
 			else:
 				func.append(('LOCAL_SET', n.name))
 
-
+	# Declaracion de funciones
 	def visit_FunctionDefinition(self, n:FunctionDefinition, func:IRFunction):
 		parmtypes = [ _typemap.get(p.type, 'I') for p in n.parameters ]
 		return_type = _typemap.get(n.return_type, 'I')
 		new_func = IRFunction(func.module, n.name, [p.name for p in n.parameters], parmtypes, return_type)
 
+		# Parametros de la funcion se añaden como variables locales
 		for param in n.parameters:
 			new_func.new_local(param.name, _typemap.get(param.type, 'I'))
-		
+		# Generar cuerpo de la funcion
 		for stmt in n.body:
 			stmt.accept(self, new_func)
 
+		# Si la funcion no tiene un return, se añade uno
 		if not any(instr[0] == 'RET' for instr in new_func.code):
 			if return_type != 'void':
 				new_func.append(('CONSTI', 0))
@@ -470,9 +486,9 @@ class IRCode(Visitor):
                  [_typemap.get(p.type, 'I') for p in n.parameters],
                  _typemap.get(n.return_type, 'I'), imported=True)
 		
-	# # --- Expressions
-	
+	# Expresiones y literales
 	def visit_Literal(self, n:Literal, func:IRFunction):
+		# Colocar el valor en la pila la instruccion IR del literal
 		if n.type == 'int':
 			func.append(('CONSTI', int(n.value)))
 		elif n.type == 'float':
@@ -480,11 +496,19 @@ class IRCode(Visitor):
 		elif n.type == 'char':
 			func.append(('CONSTI', ord(n.value)))
 		elif n.type == 'bool':
-			func.append(('CONSTI', int(n.value)))
+			#Mapear el booleano a un entero
+			if n.value.lower() == 'true':
+				func.append(('CONSTI', 1))
+			elif n.value.lower() == 'false':
+				func.append(('CONSTI', 0))
+			else:
+				raise RuntimeError(f"Valor booleano no valido: {n.value}")
+		else:
+			raise RuntimeError(f"Tipo de dato no soportado: {n.type}")
 
+	# Operaciones binarias y unarias
 	def visit_BinaryOperation(self, n:BinaryOperation, func:IRFunction):
-		
-		if n.operator == '&&':
+		if n.operator == '&&': # Si el operador es AND
 			n.left.accept(self, func)
 			func.append(('IF',))
 			n.right.accept(self, func)
@@ -518,7 +542,7 @@ class IRCode(Visitor):
 					right_type = 'float'
 
 			# Obtener el tipo de la operacion
-			op_code = self._binop_code[(left_type, op, right_type)]
+			op_code = self._binop_code.get((left_type, op, right_type), None)
 			# Agregar la instruccion al codigo IR
 			if op_code:
 				func.append((op_code,))
@@ -531,9 +555,13 @@ class IRCode(Visitor):
 		ops = self._unaryop_code.get((operator, n.operand.type), None)
 		if ops:
 			func.extend(ops)
+		n.type = n.operand.type # Asignar el tipo de la operacion al nodo
 		
+
+
+	# Conversion de tipos
 	def visit_TypeConversion(self, n: TypeConversion, func: IRFunction):
-	    # Procesar la expresión que se va a convertir
+	  # Procesar la expresión que se va a convertir
 		n.expression.accept(self, func)
 
 		# Obtener las instrucciones de conversión
@@ -545,20 +573,32 @@ class IRCode(Visitor):
 		n.type = n.target_type
 		
 	def visit_FunctionCall(self, n:FunctionCall, func:IRFunction):
+		# Procesar los argumentos de la llamada a la función
 		for arg in reversed(n.arguments):
 			arg.accept(self, func)
 		func.append(('CALL', n.name))
+
+		# Asignar el tipo de retorno de la función al nodo
+		if n.name in func.module.functions:
+			n.type = func.module.functions[n.name].return_type
+		else:
+			raise RuntimeError(f"Función no definida: {n.name}")
 	
+
+	# Lectura y escritura de variables
+
+	# Lectura de variables
 	def visit_PrimitiveReadLocation(self, n:PrimitiveReadLocation, func:IRFunction):
-		if n.name in func.locals:
-			n.node_type = func.locals[n.name]
-			func.append(('LOCAL_GET', n.name))
-		elif n.name in func.module.globals:
-			n.node_type = func.module.globals[n.name].type
-			func.append(('GLOBAL_GET', n.name))
+		if n.name in func.locals: # si la variable es local
+			n.node_type = func.locals[n.name] # asignar el tipo de la variable
+			func.append(('LOCAL_GET', n.name)) # agregar la instruccion al codigo IR
+		elif n.name in func.module.globals: # si la variable es global
+			n.node_type = func.module.globals[n.name].type # asignar el tipo de la variable
+			func.append(('GLOBAL_GET', n.name)) # agregar la instruccion al codigo IR
 		else:
 			raise RuntimeError(f"Variable no definida: {n.name}")
 		
+	# Lectura de un valor desde una direccion de memoria
 	def visit_MemoryReadLocation(self, n: MemoryReadLocation, func: IRFunction):
 		# Procesar la dirección de memoria
 		n.address.accept(self, func)
@@ -573,6 +613,7 @@ class IRCode(Visitor):
 		else:
 			raise RuntimeError(f"Tipo de dato no soportado para lectura de memoria: {n.type}")
 		
+	# Escritura de un valor en una direccion de memoria
 	def visit_MemoryAssignmentLocation(self, n: MemoryAssignmentLocation, func: IRFunction):
 		# Procesar la dirección de memoria primero
 		n.address.accept(self, func)
@@ -590,16 +631,19 @@ class IRCode(Visitor):
 		else:
 			raise RuntimeError(f"Tipo de dato no soportado para escritura en memoria: {n.value.type}")
 
+	# Instruccion de impresion
 	def visit_Print(self, n: Print, func: IRFunction):
 		n.expression.accept(self, func)  # Procesar la expresión a imprimir
 
-	    # Determinar el tipo de dato y generar la instrucción correspondiente
-		if n.expression.type == 'int':
+	  # Determinar el tipo de dato y generar la instrucción correspondiente
+		if n.expression.type == 'int' or n.expression.type == 'I':
 			func.append(('PRINTI',))  # Imprimir entero
-		elif n.expression.type == 'float':
+		elif n.expression.type == 'float' or n.expression.type == 'F':
 			func.append(('PRINTF',))  # Imprimir flotante
-		elif n.expression.type == 'char':
+		elif n.expression.type == 'char' or n.expression.type == 'C':
 			func.append(('PRINTB',))  # Imprimir byte
+		elif n.expression.type == 'bool' or n.expression.type == 'B':
+			func.append(('PRINTI',))
 		else:
 			raise RuntimeError(f"Tipo de dato no soportado para impresión: {n.expression.type}")
 
