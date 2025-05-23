@@ -422,7 +422,6 @@ class IRCode(Visitor):
 		func.append(('CBREAK',)) # Iniciar la parte "consecuencia" de un "if"
 		for stmt in n.body:
 			stmt.accept(self, func)
-		func.append(('CONTINUE',))
 		func.append(('ENDLOOP',))
 		
 	# Break, Continue y Return
