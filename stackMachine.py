@@ -1,23 +1,24 @@
 import struct
 import math
+from collections import defaultdict
 
 class StackMachine:
     def __init__(self):
         # Componentes principales
         self.stack = []                       # Pila de operandos
-        self.memory = bytearray(1024)          # Memoria lineal byte-addressable
-        self.globals = {}                      # Variables globales
-        self.locals_stack = []                 # Stack de variables locales
-        self.call_stack = []                   # Stack de llamadas (para CALL/RET)
-        self.functions = {}                    # Funciones definidas
-        self.pc = 0                            # Contador de programa
-        self.program = []                      # Programa IR cargado
+        self.memory = bytearray(1024)         # Memoria lineal byte-addressable
+        self.globals = {}                     # Variables globales
+        self.locals_stack = []                # Stack de variables locales
+        self.call_stack = []                  # Stack de llamadas (para CALL/RET)
+        self.functions = {}                   # Funciones definidas
+        self.pc = 0                           # Contador de programa
+        self.program = []                     # Programa IR cargado
         self.running = False
-        self.labels = {}                       # Etiquetas para saltos
+        self.labels = {}                      # Etiquetas para saltos
         
         # Registros especiales
-        self.sp = 0                            # Stack pointer (para memoria)
-        self.fp = 0                            # Frame pointer (para llamadas)
+        self.sp = 0                           # Stack pointer (para memoria)
+        self.fp = 0                           # Frame pointer (para llamadas)
 
     def load_program(self, program):
         """Carga un programa IR y prepara las etiquetas"""
@@ -28,7 +29,7 @@ class StackMachine:
         """Preprocesa el programa para encontrar etiquetas"""
         self.labels = {}
         for pc, instr in enumerate(self.program):
-            if instr[0] == 'LABEL':
+            if len(instr) > 0 and instr[0] == 'LABEL':
                 self.labels[instr[1]] = pc
 
     def run(self):
@@ -37,6 +38,10 @@ class StackMachine:
         self.running = True
         while self.running and self.pc < len(self.program):
             instr = self.program[self.pc]
+            if not instr:  # Instrucción vacía
+                self.pc += 1
+                continue
+                
             opname = instr[0]
             args = instr[1:] if len(instr) > 1 else []
             
@@ -48,7 +53,7 @@ class StackMachine:
                 raise RuntimeError(f"Instrucción desconocida: {opname}")
             
             # Avanza el contador de programa (a menos que la instrucción lo haya modificado)
-            if self.running and (opname not in ['CALL', 'IF', 'LOOP', 'CBREAK']):
+            if self.running and (opname not in ['CALL', 'IF', 'LOOP', 'CBREAK', 'RET']):
                 self.pc += 1
 
     # =============================================
@@ -57,95 +62,73 @@ class StackMachine:
     
     def op_CONSTI(self, value):
         """Empuja un entero a la pila"""
-        self.stack.append(('int', value))
+        self.stack.append(('int', int(value)))
         
     def op_CONSTF(self, value):
         """Empuja un float a la pila"""
-        self.stack.append(('float', value))
+        self.stack.append(('float', float(value)))
         
     def op_CONSTB(self, value):
         """Empuja un booleano a la pila"""
-        self.stack.append(('bool', value))
+        self.stack.append(('bool', bool(value)))
         
     def op_CONSTC(self, value):
         """Empuja un carácter a la pila"""
-        self.stack.append(('char', value))
-        
+        self.stack.append(('char', ord(value) if isinstance(value, str) else int(value)))
+    
     def op_POP(self):
         """Elimina el elemento superior de la pila"""
+        if not self.stack:
+            raise RuntimeError("Stack underflow")
         self.stack.pop()
     
     # =============================================
     # Operaciones aritméticas
     # =============================================
     
-    def op_ADDI(self):
+    def _binary_op(self, op, int_op, float_op):
+        """Función auxiliar para operaciones binarias"""
         b_type, b = self.stack.pop()
         a_type, a = self.stack.pop()
+        
         if a_type == 'int' and b_type == 'int':
-            self.stack.append(('int', a + b))
+            self.stack.append(('int', int_op(a, b)))
+        elif a_type == 'float' and b_type == 'float':
+            self.stack.append(('float', float_op(a, b)))
         else:
-            raise TypeError("ADDI requiere dos enteros")
+            raise TypeError(f"{op} requiere tipos compatibles")
+
+    def op_ADDI(self):
+        self._binary_op('ADDI', lambda a, b: a + b, lambda a, b: a + b)
             
     def op_SUBI(self):
-        b_type, b = self.stack.pop()
-        a_type, a = self.stack.pop()
-        if a_type == 'int' and b_type == 'int':
-            self.stack.append(('int', a - b))
-        else:
-            raise TypeError("SUBI requiere dos enteros")
+        self._binary_op('SUBI', lambda a, b: a - b, lambda a, b: a - b)
             
     def op_MULI(self):
-        b_type, b = self.stack.pop()
-        a_type, a = self.stack.pop()
-        if a_type == 'int' and b_type == 'int':
-            self.stack.append(('int', a * b))
-        else:
-            raise TypeError("MULI requiere dos enteros")
+        self._binary_op('MULI', lambda a, b: a * b, lambda a, b: a * b)
             
     def op_DIVI(self):
-        b_type, b = self.stack.pop()
-        a_type, a = self.stack.pop()
-        if a_type == 'int' and b_type == 'int':
+        def int_div(a, b):
             if b == 0:
                 raise ZeroDivisionError("División por cero")
-            self.stack.append(('int', a // b))
-        else:
-            raise TypeError("DIVI requiere dos enteros")
+            return a // b
+        self._binary_op('DIVI', int_div, lambda a, b: a / b)
             
     def op_ADDF(self):
-        b_type, b = self.stack.pop()
-        a_type, a = self.stack.pop()
-        if a_type == 'float' and b_type == 'float':
-            self.stack.append(('float', a + b))
-        else:
-            raise TypeError("ADDF requiere dos flotantes")
+        self._binary_op('ADDF', lambda a, b: float(a) + float(b), lambda a, b: a + b)
             
     def op_SUBF(self):
-        b_type, b = self.stack.pop()
-        a_type, a = self.stack.pop()
-        if a_type == 'float' and b_type == 'float':
-            self.stack.append(('float', a - b))
-        else:
-            raise TypeError("SUBF requiere dos flotantes")
+        self._binary_op('SUBF', lambda a, b: float(a) - float(b), lambda a, b: a - b)
             
     def op_MULF(self):
-        b_type, b = self.stack.pop()
-        a_type, a = self.stack.pop()
-        if a_type == 'float' and b_type == 'float':
-            self.stack.append(('float', a * b))
-        else:
-            raise TypeError("MULF requiere dos flotantes")
+        self._binary_op('MULF', lambda a, b: float(a) * float(b), lambda a, b: a * b)
             
     def op_DIVF(self):
-        b_type, b = self.stack.pop()
-        a_type, a = self.stack.pop()
-        if a_type == 'float' and b_type == 'float':
+        def float_div(a, b):
             if math.isclose(b, 0.0, abs_tol=1e-12):
                 raise ZeroDivisionError("División por cero")
-            self.stack.append(('float', a / b))
-        else:
-            raise TypeError("DIVF requiere dos flotantes")
+            return a / b
+        self._binary_op('DIVF', lambda a, b: float(a) / float(b), float_div)
     
     # =============================================
     # Operaciones lógicas y de comparación
@@ -174,69 +157,35 @@ class StackMachine:
         else:
             raise TypeError("NOTI requiere un booleano")
             
-    def op_EQI(self):
+    def _compare_op(self, op, int_op, float_op):
+        """Función auxiliar para operaciones de comparación"""
         b_type, b = self.stack.pop()
         a_type, a = self.stack.pop()
-        if a_type == b_type:
-            self.stack.append(('bool', a == b))
+        
+        if a_type == 'int' and b_type == 'int':
+            self.stack.append(('bool', int_op(a, b)))
+        elif a_type == 'float' and b_type == 'float':
+            self.stack.append(('bool', float_op(a, b)))
         else:
-            raise TypeError("EQI requiere tipos compatibles")
+            raise TypeError(f"{op} requiere tipos compatibles")
+
+    def op_EQI(self):
+        self._compare_op('EQI', lambda a, b: a == b, lambda a, b: math.isclose(a, b))
             
     def op_NEI(self):
-        b_type, b = self.stack.pop()
-        a_type, a = self.stack.pop()
-        if a_type == b_type:
-            self.stack.append(('bool', a != b))
-        else:
-            raise TypeError("NEI requiere tipos compatibles")
+        self._compare_op('NEI', lambda a, b: a != b, lambda a, b: not math.isclose(a, b))
             
     def op_LTI(self):
-        b_type, b = self.stack.pop()
-        a_type, a = self.stack.pop()
-        if a_type == 'int' and b_type == 'int':
-            self.stack.append(('bool', a < b))
-        else:
-            raise TypeError("LTI requiere dos enteros")
+        self._compare_op('LTI', lambda a, b: a < b, lambda a, b: a < b)
             
     def op_LEI(self):
-        b_type, b = self.stack.pop()
-        a_type, a = self.stack.pop()
-        if a_type == 'int' and b_type == 'int':
-            self.stack.append(('bool', a <= b))
-        else:
-            raise TypeError("LEI requiere dos enteros")
+        self._compare_op('LEI', lambda a, b: a <= b, lambda a, b: a <= b)
             
     def op_GTI(self):
-        b_type, b = self.stack.pop()
-        a_type, a = self.stack.pop()
-        if a_type == 'int' and b_type == 'int':
-            self.stack.append(('bool', a > b))
-        else:
-            raise TypeError("GTI requiere dos enteros")
+        self._compare_op('GTI', lambda a, b: a > b, lambda a, b: a > b)
             
     def op_GEI(self):
-        b_type, b = self.stack.pop()
-        a_type, a = self.stack.pop()
-        if a_type == 'int' and b_type == 'int':
-            self.stack.append(('bool', a >= b))
-        else:
-            raise TypeError("GEI requiere dos enteros")
-            
-    def op_EQF(self):
-        b_type, b = self.stack.pop()
-        a_type, a = self.stack.pop()
-        if a_type == 'float' and b_type == 'float':
-            self.stack.append(('bool', math.isclose(a, b)))
-        else:
-            raise TypeError("EQF requiere dos flotantes")
-            
-    def op_NEF(self):
-        b_type, b = self.stack.pop()
-        a_type, a = self.stack.pop()
-        if a_type == 'float' and b_type == 'float':
-            self.stack.append(('bool', not math.isclose(a, b)))
-        else:
-            raise TypeError("NEF requiere dos flotantes")
+        self._compare_op('GEI', lambda a, b: a >= b, lambda a, b: a >= b)
     
     # =============================================
     # Conversión de tipos
@@ -260,67 +209,70 @@ class StackMachine:
     # Acceso a memoria
     # =============================================
     
-    def op_PEEKI(self, offset=0):
-        """Lee un entero de 4 bytes de la memoria"""
-        addr = self.sp + offset
-        if addr + 4 > len(self.memory):
-            raise MemoryError("Acceso a memoria fuera de límites")
-        value = struct.unpack('<i', self.memory[addr:addr+4])[0]
-        self.stack.append(('int', value))
-        
-    def op_POKEI(self, offset=0):
-        """Escribe un entero de 4 bytes en la memoria"""
-        val_type, value = self.stack.pop()
-        if val_type != 'int':
-            raise TypeError("POKEI requiere un entero")
-        addr = self.sp + offset
-        if addr + 4 > len(self.memory):
-            self._grow_memory(addr + 4 - len(self.memory))
-        self.memory[addr:addr+4] = struct.pack('<i', value)
-        
-    def op_PEEKF(self, offset=0):
-        """Lee un flotante de 4 bytes de la memoria"""
-        addr = self.sp + offset
-        if addr + 4 > len(self.memory):
-            raise MemoryError("Acceso a memoria fuera de límites")
-        value = struct.unpack('<f', self.memory[addr:addr+4])[0]
-        self.stack.append(('float', value))
-        
-    def op_POKEF(self, offset=0):
-        """Escribe un flotante de 4 bytes en la memoria"""
-        val_type, value = self.stack.pop()
-        if val_type != 'float':
-            raise TypeError("POKEF requiere un flotante")
-        addr = self.sp + offset
-        if addr + 4 > len(self.memory):
-            self._grow_memory(addr + 4 - len(self.memory))
-        self.memory[addr:addr+4] = struct.pack('<f', value)
-        
-    def op_PEEKB(self, offset=0):
-        """Lee un byte de la memoria"""
-        addr = self.sp + offset
-        if addr >= len(self.memory):
-            raise MemoryError("Acceso a memoria fuera de límites")
-        value = self.memory[addr]
-        self.stack.append(('int', value))  # Tratamos bytes como enteros
-        
-    def op_POKEB(self, offset=0):
-        """Escribe un byte en la memoria"""
-        val_type, value = self.stack.pop()
-        if val_type != 'int' or value < 0 or value > 255:
-            raise TypeError("POKEB requiere un entero entre 0-255")
-        addr = self.sp + offset
-        if addr >= len(self.memory):
-            self._grow_memory(addr - len(self.memory) + 1)
-        self.memory[addr] = value
-        
     def _grow_memory(self, amount):
         """Expande la memoria en la cantidad especificada"""
         self.memory.extend(bytearray(amount))
     
-    def op_GROW(self, amount):
-        """Expande la memoria"""
+    def op_GROW(self):
+        """Expande la memoria (tamaño en la pila)"""
+        val_type, amount = self.stack.pop()
+        if val_type != 'int':
+            raise TypeError("GROW requiere un entero")
         self._grow_memory(amount)
+        self.stack.append(('int', len(self.memory)))
+    
+    def _mem_access(self, size, pack_fn, unpack_fn, type_name):
+        """Función auxiliar para operaciones de memoria"""
+        addr_type, addr = self.stack.pop()
+        if addr_type != 'int':
+            raise TypeError(f"Dirección debe ser entera para {type_name}")
+            
+        if addr + size > len(self.memory):
+            self._grow_memory(addr + size - len(self.memory))
+            
+        return addr
+
+    def op_PEEKI(self):
+        """Lee un entero de 4 bytes de la memoria"""
+        addr = self._mem_access(4, struct.pack, struct.unpack, 'PEEKI')
+        value = struct.unpack('<i', self.memory[addr:addr+4])[0]
+        self.stack.append(('int', value))
+        
+    def op_POKEI(self):
+        """Escribe un entero de 4 bytes en la memoria"""
+        val_type, value = self.stack.pop()
+        if val_type != 'int':
+            raise TypeError("POKEI requiere un entero")
+        addr = self._mem_access(4, struct.pack, struct.unpack, 'POKEI')
+        self.memory[addr:addr+4] = struct.pack('<i', value)
+        
+    def op_PEEKF(self):
+        """Lee un flotante de 4 bytes de la memoria"""
+        addr = self._mem_access(4, struct.pack, struct.unpack, 'PEEKF')
+        value = struct.unpack('<f', self.memory[addr:addr+4])[0]
+        self.stack.append(('float', value))
+        
+    def op_POKEF(self):
+        """Escribe un flotante de 4 bytes en la memoria"""
+        val_type, value = self.stack.pop()
+        if val_type != 'float':
+            raise TypeError("POKEF requiere un flotante")
+        addr = self._mem_access(4, struct.pack, struct.unpack, 'POKEF')
+        self.memory[addr:addr+4] = struct.pack('<f', value)
+        
+    def op_PEEKB(self):
+        """Lee un byte de la memoria"""
+        addr = self._mem_access(1, struct.pack, struct.unpack, 'PEEKB')
+        value = self.memory[addr]
+        self.stack.append(('int', value))  # Tratamos bytes como enteros
+        
+    def op_POKEB(self):
+        """Escribe un byte en la memoria"""
+        val_type, value = self.stack.pop()
+        if val_type != 'int' or value < 0 or value > 255:
+            raise TypeError("POKEB requiere un entero entre 0-255")
+        addr = self._mem_access(1, struct.pack, struct.unpack, 'POKEB')
+        self.memory[addr] = value
     
     # =============================================
     # Variables globales y locales
@@ -394,6 +346,13 @@ class StackMachine:
             else:
                 raise NameError(f"Etiqueta no definida: {label}")
                 
+    def op_CONTINUE(self, label):
+        """Continúa con la siguiente iteración del bucle"""
+        if label in self.labels:
+            self.pc = self.labels[label]
+        else:
+            raise NameError(f"Etiqueta no definida: {label}")
+                
     def op_ENDLOOP(self, label):
         """Fin del bucle (salto incondicional al inicio)"""
         if label in self.labels:
@@ -416,7 +375,8 @@ class StackMachine:
             })
             
             # Configura el nuevo entorno
-            self.locals_stack.append([None] * self.functions[func_name]['num_locals'])
+            num_locals = self.functions[func_name].get('num_locals', 0)
+            self.locals_stack.append([None] * num_locals)
             self.fp = len(self.stack)  # Frame pointer apunta a la base de los argumentos
             self.pc = self.functions[func_name]['address']
         else:
@@ -465,20 +425,16 @@ class StackMachine:
             raise TypeError("PRINTF requiere un flotante")
             
     def op_PRINTB(self):
-        """Imprime un booleano"""
+        """Imprime un booleano o carácter"""
         val_type, val = self.stack.pop()
         if val_type == 'bool':
             print("true" if val else "false", end='')
-        else:
-            raise TypeError("PRINTB requiere un booleano")
-            
-    def op_PRINTC(self):
-        """Imprime un carácter"""
-        val_type, val = self.stack.pop()
-        if val_type == 'char':
+        elif val_type == 'char':
+            print(chr(val), end='')
+        elif val_type == 'int' and 0 <= val <= 255:
             print(chr(val), end='')
         else:
-            raise TypeError("PRINTC requiere un carácter")
+            raise TypeError("PRINTB requiere un booleano o carácter")
             
     def op_PRINTS(self):
         """Imprime una cadena (dirección en memoria)"""
@@ -498,3 +454,5 @@ class StackMachine:
             s.append(chr(byte))
             i += 1
         print(''.join(s), end='')
+
+
