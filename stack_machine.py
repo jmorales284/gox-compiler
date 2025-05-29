@@ -137,6 +137,13 @@ class StackMachine:
     def op_ANDI(self):
         b_type, b = self.stack.pop()
         a_type, a = self.stack.pop()
+        # Convertimos a booleanos si son enteros
+        if a_type == 'int':
+            a = bool(a)
+            a_type = 'bool'
+        if b_type == 'int':
+            b = bool(b)
+            b_type = 'bool'
         if a_type == 'bool' and b_type == 'bool':
             self.stack.append(('bool', a and b))
         else:
@@ -145,6 +152,13 @@ class StackMachine:
     def op_ORI(self):
         b_type, b = self.stack.pop()
         a_type, a = self.stack.pop()
+        # Convertimos a booleanos si son enteros
+        if a_type == 'int':
+            a = bool(a)
+            a_type = 'bool'
+        if b_type == 'int':
+            b = bool(b)
+            b_type = 'bool'
         if a_type == 'bool' and b_type == 'bool':
             self.stack.append(('bool', a or b))
         else:
@@ -186,6 +200,24 @@ class StackMachine:
             
     def op_GEI(self):
         self._compare_op('GEI', lambda a, b: a >= b, lambda a, b: a >= b)
+
+    def op_LTF(self):
+        self._compare_op('LTF', lambda a, b: a < b, lambda a, b: a < b)
+
+    def op_LEF(self):
+        self._compare_op('LEF', lambda a, b: a <= b, lambda a, b: a <= b)
+
+    def op_GTF(self):
+        self._compare_op('GTF', lambda a, b: a > b, lambda a, b: a > b)
+
+    def op_GEF(self):
+        self._compare_op('GEF', lambda a, b: a >= b, lambda a, b: a >= b)
+
+    def op_EQF(self):
+        self._compare_op('EQF', lambda a, b: math.isclose(a, b), lambda a, b: math.isclose(a, b))
+
+    def op_NEF(self):
+        self._compare_op('NEF', lambda a, b: not math.isclose(a, b), lambda a, b: not math.isclose(a, b))
     
     # =============================================
     # Conversión de tipos
@@ -430,10 +462,12 @@ class StackMachine:
     # =============================================
     
     def op_PRINTI(self):
-        """Imprime un entero"""
+        """Imprime un entero o boolean como 0/1"""
         val_type, val = self.stack.pop()
         if val_type == 'int':
             print(val, end='')
+        elif val_type == 'bool':
+            print(1 if val else 0, end='')
         else:
             raise TypeError("PRINTI requiere un entero")
             
@@ -454,6 +488,8 @@ class StackMachine:
             print(chr(val), end='')
         elif val_type == 'int' and 0 <= val <= 255:
             print(chr(val), end='')
+        elif val_type == 'int':
+            print(chr(val & 0xFF), end='') # Imprime el byte menos significativo
         else:
             raise TypeError("PRINTB requiere un booleano o carácter")
             

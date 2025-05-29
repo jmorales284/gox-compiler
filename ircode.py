@@ -375,6 +375,19 @@ class IRCode(Visitor):
 		'CARET': '^'
 	}
 
+	def _normalize_type(self, type_name):
+		# Convertir 'I a 'int', 'F' a 'float', etc.
+		return {
+			'I': 'int',
+			'F': 'float',
+			'C': 'char',
+			'B': 'bool',
+			'int': 'int',
+			'float': 'float',
+			'char': 'char',
+			'bool': 'bool'
+			}.get(type_name, type_name)
+
 	# --- Constructor: Generador de codigo IR
 	@classmethod
 	def gencode(cls, node:Program):
@@ -473,6 +486,19 @@ class IRCode(Visitor):
 			else:
 				index= func.local_index(n.name) # Obtener el indice de la variable local
 				func.append(('LOCAL_SET', index))
+		else: 
+			# Si no hay valor, se inicializa a 0
+			if ir_type == 'I':
+				func.append(('CONSTI', 0))
+			elif ir_type == 'F':
+				func.append(('CONSTF', 0.0))
+			elif ir_type == 'C':
+				func.append(('CONSTI', 0))
+			if func.name == 'main':
+				func.append(('GLOBAL_SET', n.name))
+			else:
+				index= func.local_index(n.name)
+				func.append(('LOCAL_SET', index)) # Agregar la instruccion al codigo IR
 
 	# Declaracion de funciones
 	def visit_FunctionDefinition(self, n:FunctionDefinition, func:IRFunction):
@@ -540,8 +566,8 @@ class IRCode(Visitor):
 			n.right.accept(self, func)
 			# Obtener los tipos de los hijos izquierdo y derecho y el operador
 			
-			left_type = n.left.type
-			right_type = n.right.type
+			left_type = self._normalize_type(n.left.type) # Normalizar el tipo del hijo izquierdo
+			right_type = self._normalize_type(n.right.type) # Normalizar el tipo del hijo derecho
 			# Convertir el operador a un operador de un carácter
 			op = dict_equivalence.get(n.operator, n.operator) # Convertir a un operador de un carácter
 
