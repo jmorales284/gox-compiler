@@ -1,21 +1,12 @@
 const newline = '\n';
-func miFuncion() {
-    var x int = 4;
-    if x<3 {
-        print x;
-    }else if x==3 {
-        print x+1;
-    } else {
-        print x+2;
-    }
-}
-print newline;
-print 'R';
-miFuncion();
 
 func cicloFuncion(){
     var i int = 0;
     while i < 10 {
+        if i == 5 {
+            i = i + 1;
+            continue;
+        }
         print i;
         i = i + 1;
     }

@@ -388,6 +388,9 @@ class StackMachine:
     def op_CBREAK(self, label):
         """Salto condicional para break (si el tope es verdadero)"""
         val_type, val = self.stack.pop()
+        if val_type == 'int':
+            val_type = 'bool'
+            val = bool(val)
         if val_type != 'bool':
             raise TypeError("CBREAK requiere un booleano")
         if val:
