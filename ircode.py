@@ -263,6 +263,17 @@ class IRFunction:
 		print(f"locals: {self.locals}")
 		for instr in self.code:
 			print(instr)
+
+	#Metodo para obtener el indice de una variable local
+	def local_index(self, name):
+		'''
+		Obtiene el índice de una variable local por su nombre.
+		Si la variable no existe, lanza un error.
+		'''
+		if name in self.locals:
+			return list(self.locals.keys()).index(name)
+		else:
+			raise RuntimeError(f"Variable local no definida: {name}")
 			
 # Mapeo de tipos de GoxLang a tipos de IR 
 _typemap = {
@@ -397,7 +408,8 @@ class IRCode(Visitor):
 		n.expression.accept(self, func) # Se le asigna el valor a la expresion
 		#Añadir la instruccion al codigo IR
 		if n.name in func.locals: # Se decide si la variable es local o global
-			func.append(('LOCAL_SET', n.name))
+			index= func.local_index(n.name) # Obtener el indice de la variable local
+			func.append(('LOCAL_SET', index)) # Agregar la instruccion al codigo IR
 		elif n.name in func.module.globals:
 			func.append(('GLOBAL_SET', n.name))
 		else:
@@ -436,7 +448,8 @@ class IRCode(Visitor):
 
 	def visit_Return(self, n:Return, func:IRFunction):
 		if n.expression:
-			n.expression.accept(self, func)
+			print(f"Return expression: {n.expression.value} a visitar")
+			n.expression.value.accept(self, func)
 		func.append(('RET',))
 
 
@@ -458,7 +471,8 @@ class IRCode(Visitor):
 			if func.name == 'main':
 				func.append(('GLOBAL_SET', n.name))
 			else:
-				func.append(('LOCAL_SET', n.name))
+				index= func.local_index(n.name) # Obtener el indice de la variable local
+				func.append(('LOCAL_SET', index))
 
 	# Declaracion de funciones
 	def visit_FunctionDefinition(self, n:FunctionDefinition, func:IRFunction):
@@ -590,7 +604,9 @@ class IRCode(Visitor):
 	def visit_PrimitiveReadLocation(self, n:PrimitiveReadLocation, func:IRFunction):
 		if n.name in func.locals: # si la variable es local
 			n.node_type = func.locals[n.name] # asignar el tipo de la variable
-			func.append(('LOCAL_GET', n.name)) # agregar la instruccion al codigo IR
+			index = func.local_index(n.name) # obtener el indice de la variable local
+			# agregar la instruccion al codigo IR
+			func.append(('LOCAL_GET', index)) # agregar la instruccion al codigo IR
 		elif n.name in func.module.globals: # si la variable es global
 			n.node_type = func.module.globals[n.name].type # asignar el tipo de la variable
 			func.append(('GLOBAL_GET', n.name)) # agregar la instruccion al codigo IR

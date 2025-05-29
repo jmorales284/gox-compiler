@@ -366,21 +366,42 @@ class StackMachine:
     
     def op_CALL(self, func_name):
         """Llama a una función"""
-        if func_name in self.functions:
-            # Guarda el estado actual
-            self.call_stack.append({
-                'pc': self.pc + 1,  # Retornar a la siguiente instrucción
-                'locals': self.locals_stack[-1] if self.locals_stack else None,
-                'fp': self.fp
-            })
-            
-            # Configura el nuevo entorno
-            num_locals = self.functions[func_name].get('num_locals', 0)
-            self.locals_stack.append([None] * num_locals)
-            self.fp = len(self.stack)  # Frame pointer apunta a la base de los argumentos
-            self.pc = self.functions[func_name]['address']
-        else:
+        if func_name not in self.functions:
             raise NameError(f"Función no definida: {func_name}")
+        func_info = self.functions[func_name]
+        num_locals = func_info.get('num_locals', 0)
+        #Guarda el estado actual
+        self.call_stack.append({
+            'pc': self.pc + 1,  # Retornar a la siguiente instrucción
+            'locals': self.locals_stack[-1] if self.locals_stack else None,
+            'fp': self.fp
+        })
+        #Sacar argumentos de la pila
+        args = []
+        for _ in range(num_locals):
+            if self.stack:
+                args.append(self.stack.pop())
+            else:
+                args.append(('int', 0))  # Valor por defecto si no hay suficientes argumentos
+        args= list(reversed(args))  # Invertir para que el primer argumento esté al final de la pila
+        self.locals_stack.append(args)  # Crear un nuevo frame de variables locales
+        self.fp = len(self.stack)  # Frame pointer apunta a la base de los argumentos
+        self.pc = func_info['address']  # Cambia al código de la función
+        # if func_name in self.functions:
+        #     # Guarda el estado actual
+        #     self.call_stack.append({
+        #         'pc': self.pc + 1,  # Retornar a la siguiente instrucción
+        #         'locals': self.locals_stack[-1] if self.locals_stack else None,
+        #         'fp': self.fp
+        #     })
+            
+        #     # Configura el nuevo entorno
+        #     num_locals = self.functions[func_name].get('num_locals', 0)
+        #     self.locals_stack.append([None] * num_locals)
+        #     self.fp = len(self.stack)  # Frame pointer apunta a la base de los argumentos
+        #     self.pc = self.functions[func_name]['address']
+        # else:
+        #     raise NameError(f"Función no definida: {func_name}")
             
     def op_RET(self):
         """Retorna de una función"""
@@ -480,10 +501,23 @@ if __name__ == "__main__":
     print('Ast generado:')
     print(top)
     env = Checker.check(top)
-    if not errors_detected:
+    if not errors_detected():
+        print('Maquina de pila: ')
         module = IRCode.gencode(top)
         module.dump()
-
+        #Construccion del programa completo
+        program_code = [] # Es una lista de instrucciones
+        func_addresses = {} # es un diccionario que mapea nombres de funciones a sus direcciones
+        for fname, func in module.functions.items():
+            func_addresses[fname] ={
+                'address': len(program_code),
+                'num_locals': len(func.locals)
+            }
+            program_code.extend(func.code)
+        print('Codigo',program_code)
+        print('Ejecutando programa:')
         vm = StackMachine()
-        vm.load_program(module)
+        vm.load_program(program_code)
+        vm.functions = func_addresses
+        print('Funciones:', vm.functions)
         vm.run()
