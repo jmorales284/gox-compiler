@@ -429,16 +429,41 @@ class IRCode(Visitor):
 			raise RuntimeError(f"Variable no definida: {n.name}")
 
 	# Condicional IF
+	# def visit_Conditional(self, n:Conditional, func:IRFunction):
+	# 	label_else = new_temp() # Crear una etiqueta temporal para el else
+	# 	label_endif = new_temp() # Crear una etiqueta temporal para el endif
+
+	# 	n.condition.accept(self, func) # Evaluar la condicion -> pila
+	# 	func.append(('IF',label_else)) # Iniciar la parte "consecuencia" de un "if"
+	# 	for stmt in n.true_branch:
+	# 		stmt.accept(self, func) # Visitar la parte "consecuencia"
+	# 	func.append(('GOTO', label_endif)) # Saltar al final del if
+	# 	func.append(('LABEL', label_else)) # Etiqueta para la parte "alternativa"
+	# 	if n.false_branch: # Si hay una parte "alternativa"
+	# 		for stmt in n.false_branch:
+	# 			stmt.accept(self, func) # Visitar la parte "alternativa"
+	# 	func.append(('LABEL', label_endif)) # Etiqueta para el final del if
+
 	def visit_Conditional(self, n:Conditional, func:IRFunction):
-		n.condition.accept(self, func) # Evaluar la condicion -> pila
-		func.append(('IF',)) # Iniciar la parte "consecuencia" de un "if"
-		for stmt in n.true_branch:
-			stmt.accept(self, func) # Visitar la parte "consecuencia"
 		if n.false_branch: # Si hay una parte "alternativa"
-			func.append(('ELSE',))
+			label_else = new_temp() # Crear una etiqueta temporal para el else
+			label_endif = new_temp()
+			n.condition.accept(self, func) # Evaluar la condicion -> pila
+			func.append(('IF', label_else)) # Iniciar la parte "consecuencia" de un "if"
+			for stmt in n.true_branch:
+				stmt.accept(self, func)
+			func.append(('GOTO', label_endif)) # Saltar al final del if
+			func.append(('LABEL', label_else)) # Etiqueta para la parte "alternativa"
 			for stmt in n.false_branch:
-				stmt.accept(self, func) # Visitar la parte "alternativa"
-		func.append(('ENDIF',)) # Fin de la instruccion "if"
+				stmt.accept(self, func)
+			func.append(('LABEL', label_endif)) # Etiqueta para el final del if
+		else: # Si no hay parte "alternativa"
+			label_endif = new_temp() # Crear una etiqueta temporal para el endif
+			n.condition.accept(self, func) # Evaluar la condicion -> pila
+			func.append(('IF', label_endif)) # Iniciar la parte "consecuencia" de un "if"
+			for stmt in n.true_branch:
+				stmt.accept(self, func)
+			func.append(('LABEL', label_endif)) # Etiqueta para el final del if
 
 	# Ciclo WHILE
 	def visit_WhileLoop(self, n:WhileLoop, func:IRFunction):

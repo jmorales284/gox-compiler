@@ -1,9 +1,21 @@
-var x int = 2;
-var y int = 3;
 
-func sum(a int, b int,c int, d int) int {
-    return a + b+c+d;
+func miFuncion() {
+    var x int = 4;
+    if x<3 {
+        print x;
+    }else if x==3 {
+        print x+1;
+    } else {
+        print x+2;
+    }
 }
 
-var result int = sum(x, y,x,y);
-print result;
+func cicloFuncion(){
+    var i int = 0;
+    while i < 10 {
+        print i;
+        i = i + 1;
+    }
+}
+
+cicloFuncion();

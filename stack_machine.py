@@ -56,6 +56,18 @@ class StackMachine:
             if self.running and (opname not in ['CALL', 'IF', 'LOOP', 'CBREAK', 'RET']):
                 self.pc += 1
 
+    def op_LABEL(self, label):
+        """Define una etiqueta (preprocesada en load_program)"""
+        # Esta instrucción es manejada durante el preprocesamiento
+        pass
+
+    def op_GOTO(self, label):
+        """Salto incondicional a una etiqueta"""
+        if label in self.labels:
+            self.pc = self.labels[label]
+        else:
+            raise NameError(f"Etiqueta no definida: {label}")
+
     # =============================================
     # Operaciones básicas y manipulación de la pila
     # =============================================
@@ -343,6 +355,7 @@ class StackMachine:
     
     def op_IF(self, label):
         """Salto condicional si el tope de la pila es falso"""
+        print('DEBUG IF stack',self.stack)
         val_type, val = self.stack.pop()
         if val_type != 'bool':
             raise TypeError("IF requiere un booleano")
@@ -351,6 +364,9 @@ class StackMachine:
                 self.pc = self.labels[label]
             else:
                 raise NameError(f"Etiqueta no definida: {label}")
+        else:
+            # Si es verdadero, simplemente avanzamos al siguiente manualmente
+            self.pc += 1
                 
     def op_ELSE(self, label):
         """Salto incondicional (para el else)"""
