@@ -422,7 +422,6 @@ class IRCode(Visitor):
 		func.append(('CBREAK',)) # Iniciar la parte "consecuencia" de un "if"
 		for stmt in n.body:
 			stmt.accept(self, func)
-		func.append(('CONTINUE',))
 		func.append(('ENDLOOP',))
 		
 	# Break, Continue y Return
@@ -679,7 +678,7 @@ if __name__ == '__main__':
 	tokens = list(lexer.tokenize())
 	parser = Parser(tokens)
 	top = parser.parse()
-	print('AST generado:')
+	print('AST generado:') 
 	print(top)
 	env = Checker.check(top)
 
