@@ -56,6 +56,18 @@ class StackMachine:
             if self.running and (opname not in ['CALL', 'IF', 'LOOP', 'CBREAK', 'RET']):
                 self.pc += 1
 
+    def op_LABEL(self, label):
+        """Define una etiqueta (preprocesada en load_program)"""
+        # Esta instrucción es manejada durante el preprocesamiento
+        pass
+
+    def op_GOTO(self, label):
+        """Salto incondicional a una etiqueta"""
+        if label in self.labels:
+            self.pc = self.labels[label]
+        else:
+            raise NameError(f"Etiqueta no definida: {label}")
+
     # =============================================
     # Operaciones básicas y manipulación de la pila
     # =============================================
@@ -137,6 +149,13 @@ class StackMachine:
     def op_ANDI(self):
         b_type, b = self.stack.pop()
         a_type, a = self.stack.pop()
+        # Convertimos a booleanos si son enteros
+        if a_type == 'int':
+            a = bool(a)
+            a_type = 'bool'
+        if b_type == 'int':
+            b = bool(b)
+            b_type = 'bool'
         if a_type == 'bool' and b_type == 'bool':
             self.stack.append(('bool', a and b))
         else:
@@ -145,6 +164,13 @@ class StackMachine:
     def op_ORI(self):
         b_type, b = self.stack.pop()
         a_type, a = self.stack.pop()
+        # Convertimos a booleanos si son enteros
+        if a_type == 'int':
+            a = bool(a)
+            a_type = 'bool'
+        if b_type == 'int':
+            b = bool(b)
+            b_type = 'bool'
         if a_type == 'bool' and b_type == 'bool':
             self.stack.append(('bool', a or b))
         else:
@@ -186,6 +212,24 @@ class StackMachine:
             
     def op_GEI(self):
         self._compare_op('GEI', lambda a, b: a >= b, lambda a, b: a >= b)
+
+    def op_LTF(self):
+        self._compare_op('LTF', lambda a, b: a < b, lambda a, b: a < b)
+
+    def op_LEF(self):
+        self._compare_op('LEF', lambda a, b: a <= b, lambda a, b: a <= b)
+
+    def op_GTF(self):
+        self._compare_op('GTF', lambda a, b: a > b, lambda a, b: a > b)
+
+    def op_GEF(self):
+        self._compare_op('GEF', lambda a, b: a >= b, lambda a, b: a >= b)
+
+    def op_EQF(self):
+        self._compare_op('EQF', lambda a, b: math.isclose(a, b), lambda a, b: math.isclose(a, b))
+
+    def op_NEF(self):
+        self._compare_op('NEF', lambda a, b: not math.isclose(a, b), lambda a, b: not math.isclose(a, b))
     
     # =============================================
     # Conversión de tipos
@@ -312,6 +356,9 @@ class StackMachine:
     def op_IF(self, label):
         """Salto condicional si el tope de la pila es falso"""
         val_type, val = self.stack.pop()
+        if val_type == 'int':
+            val_type = 'bool'
+            val = bool(val)
         if val_type != 'bool':
             raise TypeError("IF requiere un booleano")
         if not val:
@@ -319,6 +366,9 @@ class StackMachine:
                 self.pc = self.labels[label]
             else:
                 raise NameError(f"Etiqueta no definida: {label}")
+        else:
+            # Si es verdadero, simplemente avanzamos al siguiente manualmente
+            self.pc += 1
                 
     def op_ELSE(self, label):
         """Salto incondicional (para el else)"""
@@ -366,21 +416,42 @@ class StackMachine:
     
     def op_CALL(self, func_name):
         """Llama a una función"""
-        if func_name in self.functions:
-            # Guarda el estado actual
-            self.call_stack.append({
-                'pc': self.pc + 1,  # Retornar a la siguiente instrucción
-                'locals': self.locals_stack[-1] if self.locals_stack else None,
-                'fp': self.fp
-            })
-            
-            # Configura el nuevo entorno
-            num_locals = self.functions[func_name].get('num_locals', 0)
-            self.locals_stack.append([None] * num_locals)
-            self.fp = len(self.stack)  # Frame pointer apunta a la base de los argumentos
-            self.pc = self.functions[func_name]['address']
-        else:
+        if func_name not in self.functions:
             raise NameError(f"Función no definida: {func_name}")
+        func_info = self.functions[func_name]
+        num_locals = func_info.get('num_locals', 0)
+        #Guarda el estado actual
+        self.call_stack.append({
+            'pc': self.pc + 1,  # Retornar a la siguiente instrucción
+            'locals': self.locals_stack[-1] if self.locals_stack else None,
+            'fp': self.fp
+        })
+        #Sacar argumentos de la pila
+        args = []
+        for _ in range(num_locals):
+            if self.stack:
+                args.append(self.stack.pop())
+            else:
+                args.append(('int', 0))  # Valor por defecto si no hay suficientes argumentos
+        args= list(reversed(args))  # Invertir para que el primer argumento esté al final de la pila
+        self.locals_stack.append(args)  # Crear un nuevo frame de variables locales
+        self.fp = len(self.stack)  # Frame pointer apunta a la base de los argumentos
+        self.pc = func_info['address']  # Cambia al código de la función
+        # if func_name in self.functions:
+        #     # Guarda el estado actual
+        #     self.call_stack.append({
+        #         'pc': self.pc + 1,  # Retornar a la siguiente instrucción
+        #         'locals': self.locals_stack[-1] if self.locals_stack else None,
+        #         'fp': self.fp
+        #     })
+            
+        #     # Configura el nuevo entorno
+        #     num_locals = self.functions[func_name].get('num_locals', 0)
+        #     self.locals_stack.append([None] * num_locals)
+        #     self.fp = len(self.stack)  # Frame pointer apunta a la base de los argumentos
+        #     self.pc = self.functions[func_name]['address']
+        # else:
+        #     raise NameError(f"Función no definida: {func_name}")
             
     def op_RET(self):
         """Retorna de una función"""
@@ -409,10 +480,12 @@ class StackMachine:
     # =============================================
     
     def op_PRINTI(self):
-        """Imprime un entero"""
+        """Imprime un entero o boolean como 0/1"""
         val_type, val = self.stack.pop()
         if val_type == 'int':
             print(val, end='')
+        elif val_type == 'bool':
+            print(1 if val else 0, end='')
         else:
             raise TypeError("PRINTI requiere un entero")
             
@@ -433,6 +506,8 @@ class StackMachine:
             print(chr(val), end='')
         elif val_type == 'int' and 0 <= val <= 255:
             print(chr(val), end='')
+        elif val_type == 'int':
+            print(chr(val & 0xFF), end='') # Imprime el byte menos significativo
         else:
             raise TypeError("PRINTB requiere un booleano o carácter")
             
@@ -480,10 +555,23 @@ if __name__ == "__main__":
     print('Ast generado:')
     print(top)
     env = Checker.check(top)
-    if not errors_detected:
+    if not errors_detected():
+        print('Maquina de pila: ')
         module = IRCode.gencode(top)
         module.dump()
-
+        #Construccion del programa completo
+        program_code = [] # Es una lista de instrucciones
+        func_addresses = {} # es un diccionario que mapea nombres de funciones a sus direcciones
+        for fname, func in module.functions.items():
+            func_addresses[fname] ={
+                'address': len(program_code),
+                'num_locals': len(func.locals)
+            }
+            program_code.extend(func.code)
+        print('Codigo',program_code)
+        print('Ejecutando programa:')
         vm = StackMachine()
-        vm.load_program(module)
+        vm.load_program(program_code)
+        vm.functions = func_addresses
+        print('Funciones:', vm.functions)
         vm.run()
