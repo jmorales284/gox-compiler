@@ -1,4 +1,4 @@
-
+const newline = '\n';
 func miFuncion() {
     var x int = 4;
     if x<3 {
@@ -9,6 +9,9 @@ func miFuncion() {
         print x+2;
     }
 }
+print newline;
+print 'R';
+miFuncion();
 
 func cicloFuncion(){
     var i int = 0;
@@ -17,5 +20,6 @@ func cicloFuncion(){
         i = i + 1;
     }
 }
-
+print newline;
+print 'C';
 cicloFuncion();

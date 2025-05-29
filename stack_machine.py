@@ -568,10 +568,8 @@ if __name__ == "__main__":
                 'num_locals': len(func.locals)
             }
             program_code.extend(func.code)
-        print('Codigo',program_code)
         print('Ejecutando programa:')
         vm = StackMachine()
         vm.load_program(program_code)
         vm.functions = func_addresses
-        print('Funciones:', vm.functions)
         vm.run()
