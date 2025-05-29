@@ -478,6 +478,9 @@ class IRCode(Visitor):
 		label_start = new_temp()
 		label_end = new_temp()
 
+		self.break_label = label_end # Guardar la etiqueta de final del ciclo para el break
+		self.continue_label = label_start # Guardar la etiqueta de inicio del ciclo para el continue
+
 		func.append(('LABEL', label_start)) # Etiqueta de inicio del ciclo
 		n.condition.accept(self, func) # Evaluar la condicion -> pila
 		func.append(('IF', label_end)) # Iniciar la parte "consecuencia" de un "if"
@@ -489,13 +492,13 @@ class IRCode(Visitor):
 		func.append(('LABEL', label_end)) # Etiqueta para el final del ciclo
 		
 	# Break, Continue y Return
-	def visit_break(self, n:Break, func:IRFunction):
+	def visit_Break(self, n:Break, func:IRFunction):
 		func.append(('CONSTI',1))
-		func.append(('CBREAK',))
+		func.append(('CBREAK',self.break_label)) # Agregar la instruccion de break al codigo IR
 
 
 	def visit_Continue(self, n:Continue, func:IRFunction):
-		func.append(('CONTINUE',))
+		func.append(('CONTINUE',self.continue_label)) # Agregar la instruccion de continue al codigo IR
 		pass
 
 	def visit_Return(self, n:Return, func:IRFunction):

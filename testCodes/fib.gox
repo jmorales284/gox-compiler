@@ -5,8 +5,10 @@ var b int = 1;
 var t int;
 var n int = 0;
 const LAST int = 20;
+const newline = '\n';
 
 while n < LAST {
+    print newline;
     print a;
     t = a + b;
     a = b;
