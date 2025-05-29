@@ -355,8 +355,10 @@ class StackMachine:
     
     def op_IF(self, label):
         """Salto condicional si el tope de la pila es falso"""
-        print('DEBUG IF stack',self.stack)
         val_type, val = self.stack.pop()
+        if val_type == 'int':
+            val_type = 'bool'
+            val = bool(val)
         if val_type != 'bool':
             raise TypeError("IF requiere un booleano")
         if not val:

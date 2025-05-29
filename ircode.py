@@ -465,14 +465,28 @@ class IRCode(Visitor):
 				stmt.accept(self, func)
 			func.append(('LABEL', label_endif)) # Etiqueta para el final del if
 
-	# Ciclo WHILE
+	# # Ciclo WHILE
+	# def visit_WhileLoop(self, n:WhileLoop, func:IRFunction):
+	# 	func.append(('LOOP',)) # Iniciar el ciclo
+	# 	n.condition.accept(self, func) # Se le asigna el valor a la condicion
+	# 	func.append(('CBREAK',)) # Iniciar la parte "consecuencia" de un "if"
+	# 	for stmt in n.body:
+	# 		stmt.accept(self, func)
+	# 	func.append(('ENDLOOP',))
+
 	def visit_WhileLoop(self, n:WhileLoop, func:IRFunction):
-		func.append(('LOOP',)) # Iniciar el ciclo
-		n.condition.accept(self, func) # Se le asigna el valor a la condicion
-		func.append(('CBREAK',)) # Iniciar la parte "consecuencia" de un "if"
+		label_start = new_temp()
+		label_end = new_temp()
+
+		func.append(('LABEL', label_start)) # Etiqueta de inicio del ciclo
+		n.condition.accept(self, func) # Evaluar la condicion -> pila
+		func.append(('IF', label_end)) # Iniciar la parte "consecuencia" de un "if"
+			
 		for stmt in n.body:
-			stmt.accept(self, func)
-		func.append(('ENDLOOP',))
+			stmt.accept(self, func) # Visitar la parte "consecuencia"
+
+		func.append(('GOTO',label_start))
+		func.append(('LABEL', label_end)) # Etiqueta para el final del ciclo
 		
 	# Break, Continue y Return
 	def visit_break(self, n:Break, func:IRFunction):
