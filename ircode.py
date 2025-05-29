@@ -678,7 +678,7 @@ if __name__ == '__main__':
 	tokens = list(lexer.tokenize())
 	parser = Parser(tokens)
 	top = parser.parse()
-	print('AST generado:')
+	print('AST generado:') 
 	print(top)
 	env = Checker.check(top)
 
