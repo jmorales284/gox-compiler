@@ -575,8 +575,8 @@ if __name__ == "__main__":
                 'num_args': len(func.parmnames),
             }
             program_code.extend(func.code)
-        print('Ejecutando programa:')
-        # print('Codigo IR:',program_code)
+        print('Ejecutando')
+        print('Salida del programa:')
         vm = StackMachine()
         vm.load_program(program_code)
         vm.functions = func_addresses

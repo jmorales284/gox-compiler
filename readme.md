@@ -26,7 +26,6 @@ El proyecto está dividido en varios módulos, cada uno con una responsabilidad 
 - **`errors.py`**: Maneja los errores detectados durante las fases de análisis.
 - **`ircode.py`**: Generador de código intermedio (IR).
 - **`stack_machine.py`**: Máquina de pila virtual para ejecutar el IR.
-- **`pruebaChecker.py`**: Script principal para ejecutar el compilador.
 - **`prueba.gox`**: Ejemplo de archivo fuente en GOX.
 
 ---
