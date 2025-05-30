@@ -1,25 +1,12 @@
-const newline = '\n';
-func miFuncion() {
-    var x int = 4;
-    if x<3 {
-        print x;
-    }else if x==3 {
-        print x+1;
-    } else {
-        print x+2;
-    }
-}
-print newline;
-print 'R';
-miFuncion();
+var a int = 3;
+var b int = 4;
+var c int = 5;
+var d int = 4;
+const punto = '.';
+const linea = '-';
 
-func cicloFuncion(){
-    var i int = 0;
-    while i < 10 {
-        print i;
-        i = i + 1;
-    }
+if a < b && c < d {
+    print punto;
+} else {
+    print linea;
 }
-print newline;
-print 'C';
-cicloFuncion();
