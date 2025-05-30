@@ -417,12 +417,10 @@ class IRCode(Visitor):
 
 	# Asignacion de variables
 	def visit_PrimitiveAssignmentLocation(self, n:PrimitiveAssignmentLocation, func:IRFunction):
-		#Visitar la expresion
-		n.expression.accept(self, func) # Se le asigna el valor a la expresion
-		#Añadir la instruccion al codigo IR
-		if n.name in func.locals: # Se decide si la variable es local o global
-			index= func.local_index(n.name) # Obtener el indice de la variable local
-			func.append(('LOCAL_SET', index)) # Agregar la instruccion al codigo IR
+		n.expression.accept(self, func)
+		if n.name in func.locals:
+			local_index = list(func.locals.keys()).index(n.name)
+			func.append(('LOCAL_SET', local_index))
 		elif n.name in func.module.globals:
 			func.append(('GLOBAL_SET', n.name))
 		else:
@@ -444,32 +442,25 @@ class IRCode(Visitor):
 	# 			stmt.accept(self, func) # Visitar la parte "alternativa"
 	# 	func.append(('LABEL', label_endif)) # Etiqueta para el final del if
 
-	def visit_Conditional(self, n:Conditional, func:IRFunction):
-		if n.false_branch: # Si hay una parte "alternativa"
-			label_else = new_temp() # Crear una etiqueta temporal para el else
+
+	def visit_Conditional(self, n:Conditional, func:IRFunction, continue_label, break_label):
+		if n.false_branch:
+			label_else = new_temp()
 			label_endif = new_temp()
-			n.condition.accept(self, func) # Evaluar la condicion -> pila
-			func.append(('IF', label_else)) # Iniciar la parte "consecuencia" de un "if"
-			for stmt in n.true_branch:
-				stmt.accept(self, func)
-			func.append(('GOTO', label_endif)) # Saltar al final del if
-			func.append(('LABEL', label_else)) # Etiqueta para la parte "alternativa"
-			for stmt in n.false_branch:
-				stmt.accept(self, func)
-			func.append(('LABEL', label_endif)) # Etiqueta para el final del if
-		else: # Si no hay parte "alternativa"
-			# label_endif = new_temp() # Crear una etiqueta temporal para el endif
-			# n.condition.accept(self, func) # Evaluar la condicion -> pila
-			# func.append(('IF', label_endif)) # Iniciar la parte "consecuencia" de un "if"
-			# for stmt in n.true_branch:
-			# 	stmt.accept(self, func)
-			# func.append(('LABEL', label_endif)) # Etiqueta para el final del if
-			label_after_if = new_temp() # Crear una etiqueta temporal para saltar el if
-			n.condition.accept(self, func) # Evaluar la condicion -> pila
-			func.append(('IF', label_after_if)) # Iniciar la parte "consecuencia" de un "if"
-			for stmt in n.true_branch:
-				stmt.accept(self, func)
-			func.append(('LABEL', label_after_if)) # Etiqueta para saltar el if
+			n.condition.accept(self, func)
+			func.append(('IF', label_else))
+			self.emit_loop_body(n.true_branch, func, continue_label, break_label)
+			func.append(('GOTO', label_endif))
+			func.append(('LABEL', label_else))
+			self.emit_loop_body(n.false_branch, func, continue_label, break_label)
+			func.append(('LABEL', label_endif))
+		else:
+			label_endif = new_temp()
+			n.condition.accept(self, func)
+			func.append(('IF', label_endif))
+			self.emit_loop_body(n.true_branch, func, continue_label, break_label)
+			func.append(('LABEL', label_endif))
+
 
 	# # Ciclo WHILE
 	# def visit_WhileLoop(self, n:WhileLoop, func:IRFunction):
@@ -479,33 +470,34 @@ class IRCode(Visitor):
 	# 	for stmt in n.body:
 	# 		stmt.accept(self, func)
 	# 	func.append(('ENDLOOP',))
+	def emit_loop_body(self, stmts, func, continue_label, break_label):
+		for stmt in stmts:
+			if isinstance(stmt, Continue):
+				self.visit_Continue(stmt, func, continue_label)
+			elif isinstance(stmt, Break):
+				self.visit_break(stmt, func, break_label)
+			elif isinstance(stmt, Conditional):
+				self.visit_Conditional(stmt, func, continue_label, break_label)
+			else:
+				stmt.accept(self, func)
 
 	def visit_WhileLoop(self, n:WhileLoop, func:IRFunction):
 		label_start = new_temp()
 		label_end = new_temp()
+		func.append(('LABEL', label_start))
+		n.condition.accept(self, func)
+		func.append(('IF', label_end))
+		self.emit_loop_body(n.body, func, label_start, label_end)
+		func.append(('GOTO', label_start))
+		func.append(('LABEL', label_end))
 
-		self.break_label = label_end # Guardar la etiqueta de final del ciclo para el break
-		self.continue_label = label_start # Guardar la etiqueta de inicio del ciclo para el continue
-
-		func.append(('LABEL', label_start)) # Etiqueta de inicio del ciclo
-		n.condition.accept(self, func) # Evaluar la condicion -> pila
-		func.append(('IF', label_end)) # Iniciar la parte "consecuencia" de un "if"
-			
-		for stmt in n.body:
-			stmt.accept(self, func) # Visitar la parte "consecuencia"
-
-		func.append(('GOTO',label_start))
-		func.append(('LABEL', label_end)) # Etiqueta para el final del ciclo
-		
 	# Break, Continue y Return
-	def visit_Break(self, n:Break, func:IRFunction):
-		func.append(('CONSTI',1))
-		func.append(('CBREAK',self.break_label)) # Agregar la instruccion de break al codigo IR
+	def visit_break(self, n:Break, func:IRFunction, label):
+		func.append(('GOTO',label))
 
 
-	def visit_Continue(self, n:Continue, func:IRFunction):
-		func.append(('CONTINUE',self.continue_label)) # Agregar la instruccion de continue al codigo IR
-		pass
+	def visit_Continue(self, n:Continue, func:IRFunction, label):
+		func.append(('GOTO', label))
 
 	def visit_Return(self, n:Return, func:IRFunction):
 		if n.expression:
@@ -677,14 +669,14 @@ class IRCode(Visitor):
 
 	# Lectura de variables
 	def visit_PrimitiveReadLocation(self, n:PrimitiveReadLocation, func:IRFunction):
-		if n.name in func.locals: # si la variable es local
-			n.node_type = func.locals[n.name] # asignar el tipo de la variable
-			index = func.local_index(n.name) # obtener el indice de la variable local
-			# agregar la instruccion al codigo IR
-			func.append(('LOCAL_GET', index)) # agregar la instruccion al codigo IR
-		elif n.name in func.module.globals: # si la variable es global
-			n.node_type = func.module.globals[n.name].type # asignar el tipo de la variable
-			func.append(('GLOBAL_GET', n.name)) # agregar la instruccion al codigo IR
+		if n.name in func.locals:
+			# Convertir nombre a índice
+			local_index = list(func.locals.keys()).index(n.name)
+			n.node_type = func.locals[n.name]
+			func.append(('LOCAL_GET', local_index))
+		elif n.name in func.module.globals:
+			n.node_type = func.module.globals[n.name].type
+			func.append(('GLOBAL_GET', n.name))
 		else:
 			raise RuntimeError(f"Variable no definida: {n.name}")
 		

@@ -195,32 +195,44 @@ class Parser:
         else:
             raise SyntaxError(f"Línea {self.peek().lineno}: Se esperaba un nombre de variable después de '='")
 
+    def infer_type(self, expr):
+        # Caso Literal
+        if hasattr(expr, 'type') and expr.type:
+            return expr.type
+        # Caso operación unaria
+        if hasattr(expr, 'operand'):
+            return self.infer_type(expr.operand)
+        # Caso operación binaria
+        if hasattr(expr, 'left') and hasattr(expr, 'right'):
+            left_type = self.infer_type(expr.left)
+            right_type = self.infer_type(expr.right)
+            if left_type == right_type and left_type is not None:
+                return left_type
+        # Caso conversión de tipo
+        if hasattr(expr, 'target_type'):
+            return expr.target_type
+        return None
+
     def vardecl(self) -> VariableDeclaration:
         is_constant = self.match("const")
         if not is_constant:
             self.consume("var", "Se esperaba 'var' o 'const'")
-        
-        # Obtener el nombre de la variable
+
         name_token = self.consume("ID", "Se esperaba nombre de variable después de var/const")
-        
-        # Manejar tipo explícito (opcional)
         var_type = None
         if self.peek() and self.peek().type in {"int", "float", "bool", "char"}:
             var_type = self.advance().value
-    
-        # Manejar asignación (opcional)
+
         value = None
         if self.match("ASSIGN"):
             value = self.expression()
-            if not var_type and isinstance(value, Literal):
-                var_type = value.type  # Inferir tipo del valor inicial
-        
+            if not var_type and is_constant:
+                var_type = self.infer_type(value)
+
         if not var_type:
             raise SyntaxError(f"Línea {name_token.lineno}: No se pudo inferir el tipo de la variable '{name_token.value}'.")
-    
-        # Consumir el punto y coma final
+
         self.consume("SEMI", "Se esperaba ';' al final de la declaración")
-        
         return VariableDeclaration(
             name=name_token.value,
             var_type=var_type,
@@ -229,7 +241,6 @@ class Parser:
             lineno=name_token.lineno
         )
         
-
 
 
 
