@@ -7,34 +7,36 @@
 
 const n int = 100;         // Cuantos primos
 const base int = ^(n + 1); // Memoria para n+1 posiciones
+const newline = '\n';
 
 // Inicializa todos los valores en true (1)
 var i int = 2;
 while i <= n {
-	`(base + i) = 1;		// true
-	i = i + 1;
+    `(base + i * 4) = 1; // true
+    i = i + 1;
 }
 
-// Criba de Eratóstenes
+// Criba de Eratóstenes
 i = 2;
 while i * i <= n {
-	if `(base + i) == 1  {
-		var j int = i * i;
-		while j <= n {
-			print j;
-			`(base + j) = 0;   // No primo (false)
-			j = j + i;
-		}
-	}
-	i = i + 1;
+    if `(base + i * 4) == 1  {
+        var j int = i * i;
+        while j <= n {
+            // print j;
+            `(base + j * 4) = 0;   // No primo (false)
+            j = j + i;
+        }
+    }
+    i = i + 1;
 }
 
 // Imprimir los primos
 i = 2;
 while i <= n {
-	if `(base + i) == 1 {
-		print i;
-	}
-	i = i + 1;
+    if `(base + i * 4) == 1 {
+				print newline;
+        print i;
+    }
+    i = i + 1;
 }
 
