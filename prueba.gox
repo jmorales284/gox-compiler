@@ -1,16 +1,19 @@
-const newline = '\n';
+func mod(x int, y int) int {
+    return x - (x / y) * y;
+}
 
-func cicloFuncion(){
-    var i int = 0;
-    while i < 10 {
-        if i == 5 {
-            i = i + 1;
-            continue;
+func isprime(n int) bool {
+    if n < 2 {
+        return false;
+    }
+    var i int = 2;
+    while i * i <= n {
+        if mod(n, i) == 0 {
+            return false;
         }
-        print i;
         i = i + 1;
     }
+    return true;
 }
-print newline;
-print 'C';
-cicloFuncion();
+
+print isprime(7); // true
