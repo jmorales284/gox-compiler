@@ -262,8 +262,9 @@ class StackMachine:
         val_type, amount = self.stack.pop()
         if val_type != 'int':
             raise TypeError("GROW requiere un entero")
+        base_addr = len(self.memory)
         self._grow_memory(amount)
-        self.stack.append(('int', len(self.memory)))
+        self.stack.append(('int', base_addr))
     
     def _mem_access(self, size, pack_fn, unpack_fn, type_name):
         """Función auxiliar para operaciones de memoria"""
