@@ -458,12 +458,18 @@ class IRCode(Visitor):
 				stmt.accept(self, func)
 			func.append(('LABEL', label_endif)) # Etiqueta para el final del if
 		else: # Si no hay parte "alternativa"
-			label_endif = new_temp() # Crear una etiqueta temporal para el endif
+			# label_endif = new_temp() # Crear una etiqueta temporal para el endif
+			# n.condition.accept(self, func) # Evaluar la condicion -> pila
+			# func.append(('IF', label_endif)) # Iniciar la parte "consecuencia" de un "if"
+			# for stmt in n.true_branch:
+			# 	stmt.accept(self, func)
+			# func.append(('LABEL', label_endif)) # Etiqueta para el final del if
+			label_after_if = new_temp() # Crear una etiqueta temporal para saltar el if
 			n.condition.accept(self, func) # Evaluar la condicion -> pila
-			func.append(('IF', label_endif)) # Iniciar la parte "consecuencia" de un "if"
+			func.append(('IF', label_after_if)) # Iniciar la parte "consecuencia" de un "if"
 			for stmt in n.true_branch:
 				stmt.accept(self, func)
-			func.append(('LABEL', label_endif)) # Etiqueta para el final del if
+			func.append(('LABEL', label_after_if)) # Etiqueta para saltar el if
 
 	# # Ciclo WHILE
 	# def visit_WhileLoop(self, n:WhileLoop, func:IRFunction):
@@ -655,7 +661,8 @@ class IRCode(Visitor):
 		
 	def visit_FunctionCall(self, n:FunctionCall, func:IRFunction):
 		# Procesar los argumentos de la llamada a la función
-		for arg in reversed(n.arguments):
+		# for arg in reversed(n.arguments):
+		for arg in n.arguments:
 			arg.accept(self, func)
 		func.append(('CALL', n.name))
 
