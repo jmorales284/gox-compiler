@@ -3,7 +3,15 @@
 - Juan Manuel Morales
 - Camilo Eduardo Muñoz Albornoz
 
-Este proyecto implementa un compilador para el lenguaje **GOX**, que incluye un analizador léxico, un analizador sintáctico y un analizador semántico. El compilador procesa un archivo fuente escrito en GOX y genera un árbol de sintaxis abstracta (AST), además de realizar verificaciones semánticas.
+## Descripción
+
+Este proyecto implementa un **compilador para el lenguaje GOX (GoxLang)**. El compilador realiza las siguientes fases:
+
+- **Análisis léxico**: Convierte el código fuente en una lista de tokens.
+- **Análisis sintáctico**: Construye un Árbol de Sintaxis Abstracta (AST) a partir de los tokens.
+- **Análisis semántico**: Verifica tipos, declaraciones y el uso correcto de variables y funciones.
+- **Generación de código intermedio (IR)**: Traduce el AST a instrucciones para una máquina de pila virtual.
+- **Ejecución**: Interpreta el código IR en una máquina de pila.
 
 ## Estructura del Proyecto
 
@@ -16,7 +24,10 @@ El proyecto está dividido en varios módulos, cada uno con una responsabilidad 
 - **`symtab.py`**: Implementa la tabla de símbolos, que almacena información sobre variables, funciones y otros elementos del programa.
 - **`typesys.py`**: Define el sistema de tipos y las reglas para operaciones binarias y unarias.
 - **`errors.py`**: Maneja los errores detectados durante las fases de análisis.
-- **`pruebaChecker.py`**: Archivo principal para ejecutar el compilador con un archivo fuente de prueba.
+- **`ircode.py`**: Generador de código intermedio (IR).
+- **`stack_machine.py`**: Máquina de pila virtual para ejecutar el IR.
+- **`pruebaChecker.py`**: Script principal para ejecutar el compilador.
+- **`prueba.gox`**: Ejemplo de archivo fuente en GOX.
 
 ---
 
@@ -32,11 +43,11 @@ Antes de ejecutar el compilador, asegúrate de tener instalado lo siguiente:
 
 ---
 
-## Cómo Ejecutar el Compilador
+## Uso
 
-### 1. Preparar el Archivo Fuente
+### 1. Escribe tu programa en GOX
 
-Escribe tu programa en GOX en un archivo con extensión `.gox`. Por ejemplo, crea un archivo llamado prueba.gox con el siguiente contenido:
+Crea un archivo con extensión `.gox`, por ejemplo `prueba.gox`:
 
 ```gox
 func mod(x int, y int) int {
@@ -56,46 +67,49 @@ func isprime(n int) bool {
     }
     return true;
 }
+
+print isprime(7); // true or 1
 ```
 
-### 2. Ejecutar el Compilador
+### 2. Ejecuta el compilador
 
-Ejecuta el archivo pruebaChecker.py para analizar el archivo fuente:
+Para analizar y ejecutar tu archivo fuente:
 
 ```bash
-python pruebaChecker.py
+python stack_machine.py prueba.gox
 ```
 
-### 3. Salida del Compilador
+### 3. Salida esperada
 
-El compilador realiza las siguientes tareas y genera la salida correspondiente:
+El compilador mostrará:
 
-1. **Análisis Léxico**:
-   - Convierte el código fuente en una lista de tokens.
-   - Ejemplo de salida:
-     ```
-     func: func Línea 1
-     ID: mod Línea 1
-     LPAREN: ( Línea 1
-     ID: x Línea 1
-     int: int Línea 1
-     ...
-     ```
+- El AST generado.
+- La tabla de símbolos.
+- El código intermedio (IR) generado.
+- La ejecución del programa en la máquina de pila.
 
-2. **Análisis Sintáctico**:
-   - Genera un árbol de sintaxis abstracta (AST) a partir de los tokens.
-   - Ejemplo de salida:
-     ```
-     AST generado:
-     Program(statements=[FunctionDefinition(name=mod, parameters=[Parameter(x, int), Parameter(y, int)], return_type=int, body=[Return(Expression(...))]), ...])
-     ```
+---
 
-3. **Análisis Semántico**:
-   - Verifica la validez del programa, como tipos de datos, declaraciones de variables y funciones, y estructuras de control.
-   - Si hay errores, los muestra con el número de línea:
-     ```
-     7: Error: Tipo de retorno 'float' no coincide con el tipo de la función 'isprime' que es 'bool'.
-     ```
+## Ejemplo de Salida
+
+```
+Ast generado:
+Program(statements=[...])
+Symbol Table: 'global'
+┌──────────┬───────────────────────────┐
+│ key      │ value                     │
+├──────────┼───────────────────────────┤
+│ mod      │ FunctionDefinition(...)   │
+│ isprime  │ FunctionDefinition(...)   │
+└──────────┴───────────────────────────┘
+Maquina de pila:
+MODULE:::
+GLOBAL::: ...
+FUNCTION::: ...
+...
+Ejecutando programa:
+...
+```
 
 ---
 
@@ -103,12 +117,7 @@ El compilador realiza las siguientes tareas y genera la salida correspondiente:
 
 ### 1. **Análisis Léxico (`glexer.py`)**
 
-El analizador léxico convierte el código fuente en una lista de tokens. Cada token incluye:
-
-- Tipo (`type`): Identifica el tipo del token (e.g., `ID`, `INTEGER`, `PLUS`).
-- Valor (`value`): El valor literal del token.
-- Línea (`lineno`): La línea del código fuente donde se encuentra el token.
-
+Convierte el código fuente en tokens.  
 Ejemplo de token:
 ```python
 Token(type='ID', value='mod', lineno=1)
@@ -116,8 +125,7 @@ Token(type='ID', value='mod', lineno=1)
 
 ### 2. **Análisis Sintáctico (`gparser.py`)**
 
-El analizador sintáctico convierte los tokens en un árbol de sintaxis abstracta (AST). Utiliza métodos como `statement`, `expression`, y `funcdecl` para construir nodos del AST.
-
+Construye el AST a partir de los tokens.  
 Ejemplo de nodo AST:
 ```python
 FunctionDefinition(
@@ -130,13 +138,7 @@ FunctionDefinition(
 
 ### 3. **Análisis Semántico (`checkNew.py`)**
 
-El analizador semántico recorre el AST y verifica:
-
-- Declaraciones de variables y funciones.
-- Tipos de datos en operaciones y asignaciones.
-- Uso correcto de estructuras de control (`if`, `while`, etc.).
-- Retornos en funciones con tipos de retorno.
-
+Verifica tipos, declaraciones y estructuras de control.  
 Ejemplo de verificación:
 ```python
 def visit_Return(self, node: Return, env: Symtab):
@@ -144,18 +146,13 @@ def visit_Return(self, node: Return, env: Symtab):
     if not func:
         error(f"Línea {node.lineno}: 'return' fuera de una función.")
         return
-
-    if node.expression:
-        return_type = node.expression.accept(self, env)
-        if return_type != func.return_type:
-            error(f"Línea {node.lineno}: Tipo de retorno '{return_type}' no coincide con el tipo de la función '{func.name}' que es '{func.return_type}'.")
+    ...
 ```
 
 ### 4. **Tabla de Símbolos (`symtab.py`)**
 
-La tabla de símbolos almacena información sobre variables, funciones y otros elementos del programa. Soporta entornos anidados para manejar funciones y bloques.
-
-Ejemplo de tabla de símbolos:
+Almacena información sobre variables y funciones.  
+Ejemplo:
 ```
 Symbol Table: 'global'
 ┌──────────┬───────────────────────────┐
@@ -166,35 +163,48 @@ Symbol Table: 'global'
 └──────────┴───────────────────────────┘
 ```
 
----
+### 5. **Generación de Código IR (`ircode.py`)**
 
-## Cómo Personalizar el Compilador
+Traduce el AST a instrucciones para la máquina de pila.
 
-1. **Agregar Nuevas Funcionalidades**:
-   - Modifica `gparser.py` para soportar nuevas construcciones del lenguaje.
-   - Actualiza `checkNew.py` para verificar las nuevas construcciones.
+### 6. **Ejecución en Máquina de Pila (`stack_machine.py`)**
 
-2. **Extender el Sistema de Tipos**:
-   - Agrega nuevos tipos o reglas de operadores en `typesys.py`.
-
-3. **Manejo de Errores**:
-   - Personaliza los mensajes de error en `errors.py`.
+Interpreta y ejecuta el código IR.
 
 ---
 
-## Ejemplo de Errores Detectados
+## Personalización
 
-1. **Variable no declarada**:
-   ```
-   Línea 10: Error: La variable 'i' no está definida.
-   ```
+- **Agregar nuevas construcciones**: Modifica `gparser.py` y `gmodel.py`.
+- **Extender el sistema de tipos**: Edita `typesys.py`.
+- **Mejorar mensajes de error**: Personaliza `errors.py`.
+- **Agregar instrucciones IR**: Modifica `ircode.py` y `stack_machine.py`.
 
-2. **Tipo de retorno incorrecto**:
-   ```
-   Línea 7: Error: Tipo de retorno 'float' no coincide con el tipo de la función 'isprime' que es 'bool'.
-   ```
+---
 
-3. **Uso incorrecto de estructuras de control**:
-   ```
-   Línea 15: Error: 'break' fuera de un bucle while.
-   ```
+# Ejemplo de Errores Detectados
+
+- **Variable no declarada**:
+  ```
+  Línea 10: Error: La variable 'i' no está definida.
+  ```
+- **Tipo de retorno incorrecto**:
+  ```
+  Línea 7: Error: Tipo de retorno 'float' no coincide con el tipo de la función 'isprime' que es 'bool'.
+  ```
+- **Uso incorrecto de estructuras de control**:
+  ```
+  Línea 15: Error: 'break' fuera de un bucle while.
+  ```
+
+---
+
+## Créditos
+
+Este proyecto fue desarrollado como parte del curso de compiladores.
+
+---
+
+## Licencia
+
+Este proyecto es de uso académico y educativo.

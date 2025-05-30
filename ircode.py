@@ -442,6 +442,7 @@ class IRCode(Visitor):
 	# 			stmt.accept(self, func) # Visitar la parte "alternativa"
 	# 	func.append(('LABEL', label_endif)) # Etiqueta para el final del if
 
+
 	def visit_Conditional(self, n:Conditional, func:IRFunction, continue_label, break_label):
 		if n.false_branch:
 			label_else = new_temp()
@@ -497,7 +498,6 @@ class IRCode(Visitor):
 
 	def visit_Continue(self, n:Continue, func:IRFunction, label):
 		func.append(('GOTO', label))
-
 
 	def visit_Return(self, n:Return, func:IRFunction):
 		if n.expression:
@@ -653,7 +653,8 @@ class IRCode(Visitor):
 		
 	def visit_FunctionCall(self, n:FunctionCall, func:IRFunction):
 		# Procesar los argumentos de la llamada a la función
-		for arg in reversed(n.arguments):
+		# for arg in reversed(n.arguments):
+		for arg in n.arguments:
 			arg.accept(self, func)
 		func.append(('CALL', n.name))
 

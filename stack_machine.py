@@ -388,6 +388,9 @@ class StackMachine:
     def op_CBREAK(self, label):
         """Salto condicional para break (si el tope es verdadero)"""
         val_type, val = self.stack.pop()
+        if val_type == 'int':
+            val_type = 'bool'
+            val = bool(val)
         if val_type != 'bool':
             raise TypeError("CBREAK requiere un booleano")
         if val:
@@ -420,6 +423,7 @@ class StackMachine:
             raise NameError(f"Función no definida: {func_name}")
         func_info = self.functions[func_name]
         num_locals = func_info.get('num_locals', 0)
+        num_args = func_info.get('num_args', len(func_info.get('parmnames', [])))
         #Guarda el estado actual
         self.call_stack.append({
             'pc': self.pc + 1,  # Retornar a la siguiente instrucción
@@ -428,13 +432,14 @@ class StackMachine:
         })
         #Sacar argumentos de la pila
         args = []
-        for _ in range(num_locals):
+        for _ in range(num_args):
             if self.stack:
                 args.append(self.stack.pop())
             else:
                 args.append(('int', 0))  # Valor por defecto si no hay suficientes argumentos
         args= list(reversed(args))  # Invertir para que el primer argumento esté al final de la pila
-        self.locals_stack.append(args)  # Crear un nuevo frame de variables locales
+        frame= args + [('int', 0)] * (num_locals - len(args))  # Completar con None si no hay suficientes argumentos
+        self.locals_stack.append(frame)  # Crear un nuevo frame de variables locales
         self.fp = len(self.stack)  # Frame pointer apunta a la base de los argumentos
         self.pc = func_info['address']  # Cambia al código de la función
         # if func_name in self.functions:
@@ -565,10 +570,12 @@ if __name__ == "__main__":
         for fname, func in module.functions.items():
             func_addresses[fname] ={
                 'address': len(program_code),
-                'num_locals': len(func.locals)
+                'num_locals': len(func.locals),
+                'num_args': len(func.parmnames),
             }
             program_code.extend(func.code)
         print('Ejecutando programa:')
+        # print('Codigo IR:',program_code)
         vm = StackMachine()
         vm.load_program(program_code)
         vm.functions = func_addresses
